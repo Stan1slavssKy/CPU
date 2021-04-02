@@ -15,17 +15,17 @@ struct string* assembler_construct (file* asm_file, char* file_name)
      
 void deep_analize_array (file* asm_file, string* data)
 {
-    int   cmd_number = 0; 
-    int   cmd_len    = 0;
-    int   cmd_code   = 0;
-    
+    double   cmd_number = 0; 
+    double   cmd_code   = 0;
+    int      cmd_len    = 0;
+
     char* p_beg_str = nullptr;
     char* cmd_ptr   = nullptr;
     char* nmb_ptr   = nullptr;  
     
-    char* tokes_arr = (char*) calloc (asm_file -> size_of_file, sizeof (char)); 
-    assert (tokes_arr != nullptr)
-    ;
+    double* tokes_arr = (double*) calloc (asm_file -> size_of_file, sizeof (double)); 
+    assert (tokes_arr != nullptr);
+    
     int  idx = 0;
 
     for (int i = 0; i < (asm_file -> number_line); i++)     // цикл по каждой структуре массива структур
@@ -38,7 +38,7 @@ void deep_analize_array (file* asm_file, string* data)
         if (nmb_ptr != nullptr) /* if found a number*/
         {
             cmd_len     = nmb_ptr - cmd_ptr - 1;
-            cmd_number  = atoi (nmb_ptr);
+            cmd_number  = atof (nmb_ptr);
 
             char* cmd_buffer  = (char*) calloc (cmd_len + 1, sizeof (char)); // +1 for place /0 cause scrmp need /0
             assert (cmd_buffer != nullptr);
@@ -46,7 +46,7 @@ void deep_analize_array (file* asm_file, string* data)
             for (int item = 0; item < cmd_len; item++) 
                 cmd_buffer[item] = p_beg_str[item];
             
-            cmd_buffer[cmd_len + 1] = '\0';
+            cmd_buffer[cmd_len] = '\0';
 
             cmd_code = assembling (cmd_buffer);
 
@@ -57,7 +57,7 @@ void deep_analize_array (file* asm_file, string* data)
                 idx++;
             tokes_arr[idx] = ' ';
                 idx++;
-            tokes_arr[idx] = (char) cmd_number;
+            tokes_arr[idx] = cmd_number;
                 idx++;
             tokes_arr[idx] = ' ';
                 idx++;
@@ -73,7 +73,7 @@ void deep_analize_array (file* asm_file, string* data)
             for (int item = 0; item < cmd_len; item++) 
                 cmd_buffer[item] = p_beg_str[item];
             
-            cmd_buffer[cmd_len + 1] = '\0';
+            cmd_buffer[cmd_len] = '\0';
             cmd_code = assembling (cmd_buffer);
             
             free (cmd_buffer);
@@ -83,7 +83,7 @@ void deep_analize_array (file* asm_file, string* data)
                 idx++;
             tokes_arr[idx] = ' ';
                 idx++;
-        }
+        }//GGGGGGGGGGGGGGGG
     }
 
     input_b_file (asm_file, tokes_arr);
@@ -94,12 +94,13 @@ void deep_analize_array (file* asm_file, string* data)
 
 //=====================================================================================================
 
-int assembling (char* cmd)
+double assembling (char* cmd)
 {
     using namespace my_commands;
 
     if (0) printf ("CACATB\n");
     
+    get_command (push, PUSH)
     get_command (pop, POP)
     get_command (add, ADD)
     get_command (sub, SUB)
@@ -114,12 +115,17 @@ int assembling (char* cmd)
 
 //=====================================================================================================
 
-void input_b_file (file* asm_file, char* tokes_arr)
+void input_b_file (file* asm_file, double* tokes_arr)
 {
     FILE* file = fopen ("../txt files/asm_binary", "wb");
     assert (file != nullptr);
 
-    fwrite (tokes_arr, sizeof (char), asm_file -> size_of_file, file);
+    for (int i = 0; i < asm_file -> size_of_file; i++)
+    {
+        printf ("[%lg]\n", *(tokes_arr + i));
+    }
+   
+    fwrite (tokes_arr, sizeof (double), asm_file -> size_of_file, file);
 
     fclose (file);
 }
