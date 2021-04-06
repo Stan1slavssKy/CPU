@@ -14,10 +14,10 @@ INCLUDE     = onegin
 default: valgrind
 
 valgrind: $(OUTPUT)
-	valgrind ./$(OUTPUT)
+	valgrind ./$(OUTPUT)"../txt files/asm"
 
 launch: $(OUTPUT)
-	./$(OUTPUT)
+	./$(OUTPUT)"../txt files/asm"
 
 $(OUTPUT): $(OBJECT)
 	$(CXX) $(WARNINGS) $(DEBUG_MODE) $^ -L$(INCLUDE_DIR) -l$(INCLUDE) -o $(OUTPUT)
