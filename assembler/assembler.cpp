@@ -1,10 +1,10 @@
 #include "assembler.h"
 
-struct string* assembler_construct (file* asm_file, char* file_name)
+struct str* assembler_read (file* asm_file, char* file_name)
 {
-    read_asm (file_name, asm_file);
+    input_inform (file_name, asm_file);
 
-    struct string* data = place_pointers (asm_file);
+    struct str* data = place_pointers (asm_file, data);
 
     deep_analize_array (asm_file, data);
 
@@ -13,7 +13,7 @@ struct string* assembler_construct (file* asm_file, char* file_name)
 
 //=====================================================================================================
      
-void deep_analize_array (file* asm_file, string* data)
+void deep_analize_array (file* asm_file, str* data)
 {
     double   cmd_number = 0; 
     double   cmd_code   = 0;
@@ -25,12 +25,12 @@ void deep_analize_array (file* asm_file, string* data)
     
     double* tokes_arr = (double*) calloc (asm_file -> size_of_file, sizeof (double)); 
     assert (tokes_arr != nullptr);
-    
+
     int  idx = 0;
 
     for (int i = 0; i < (asm_file -> number_line); i++)     // цикл по каждой структуре массива структур
     {
-        p_beg_str = (data + i) -> beg_ptr;
+        p_beg_str = (data + i) -> p_begin_str;
       
         cmd_ptr   = strtok (p_beg_str, " ,\n,\0");
         nmb_ptr   = strtok (NULL," ,\n,\0");
@@ -83,7 +83,7 @@ void deep_analize_array (file* asm_file, string* data)
                 idx++;
             tokes_arr[idx] = ' ';
                 idx++;
-        }//GGGGGGGGGGGGGGGG
+        }
     }
 
     input_b_file (asm_file, tokes_arr);
@@ -132,7 +132,7 @@ void input_b_file (file* asm_file, double* tokes_arr)
 
 //=====================================================================================================
 
-void assembler_destruct (char* asm_buffer, string* data)
+void assembler_free (char* asm_buffer, str* data)
 {
     free (asm_buffer);
     asm_buffer = nullptr;

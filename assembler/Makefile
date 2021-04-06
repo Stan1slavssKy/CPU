@@ -1,12 +1,32 @@
-all: launch
+CXX       = g++
+WARNINGS  = -Wall -Wextra 
 
-.PHONY: valgrind launch compile
+DEBUG_MODE   = -g3 -O0 
+RELEASE_MODE = -g0 -O3
 
-valgrind: compile
-	valgrind ./assembler
+SOURCE  = assembler_main.cpp assembler.cpp 
+OBJECT  = assembler_main.o   assembler.o 
+OUTPUT  = assembler 
 
-launch: compile
-	./assembler
+INCLUDE_DIR = ../../Onegin
+INCLUDE     = onegin
 
-compile: assembler.cpp assembler_main.cpp parsing.cpp
-	g++ -Wall -Wextra -g3 -O0 $^ -o assembler
+default: valgrind
+
+valgrind: $(OUTPUT)
+	valgrind ./$(OUTPUT)
+
+launch: $(OUTPUT)
+	./$(OUTPUT)
+
+$(OUTPUT): $(OBJECT)
+	$(CXX) $(WARNINGS) $(DEBUG_MODE) $^ -L$(INCLUDE_DIR) -l$(INCLUDE) -o $(OUTPUT)
+
+main.o: main_cpu.cpp
+	$(CXX) $(WARNINGS) $(DEBUG_MODE) main_cpu.cpp -c
+
+stack.o: cpu.cpp
+	$(CXX) $(WARNINGS) $(DEBUG_MODE) cpu.cpp -c
+
+clean:
+	rm -f *.o *.a $(OUTPUT)

@@ -10,6 +10,8 @@
 #include <sys/stat.h>  
 #include <ctype.h>
 
+#include "../../Onegin/Onegin.h"
+
 //=================================================================================
 
 namespace my_commands
@@ -36,40 +38,14 @@ namespace my_commands
 
 //=================================================================================
 
-struct file
-{
-    int size_of_file;
-    int number_words;
-    int number_line;
-    
-    char* file_buffer;
-};
+str* assembler_read (file* asm_file, char* file_name);
+void assembler_free (char* asm_buffer, str* data);
 
-struct string 
-{
-    char* beg_ptr;
-    int   str_length;
-};
-
-struct assembler
-{
-    
-};
+void    read_asm     (char* file_name, file* asm_file);
+void    deep_analize_array (file* asm_file, str* data);
+void    input_b_file (file* asm_file, double* tokes_arr);
+double  assembling   (char* cmd);
 
 //=================================================================================
-
-string* assembler_construct (file* asm_file, char* file_name);
-void    assembler_destruct  (char* asm_buffer, string* data);
-
-void   read_asm     (char* file_name, file* asm_file);
-char*  read_file    (char* file_name, int size_of_file);
-int    file_size    (char* file_name);
-int    counter_line (char* file_buffer);
-
-string* place_pointers (file* asm_file);
-
-void   deep_analize_array (file* asm_file, string* data);
-void   input_b_file (file* asm_file, char* tokes_arr);
-int    assembling   (char* cmd);
 
 #endif
