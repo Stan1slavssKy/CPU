@@ -1,19 +1,16 @@
 #include "assembler.h"
 
-struct str* assembler_read (file* asm_file, char* file_name)
+void assembler_read (text* asm_file, char* file_name)
 {
     input_inform (file_name, asm_file);
-
-    struct str* data = place_pointers (asm_file, data);
-
-    deep_analize_array (asm_file, data);
-
-    return data;
+   
+    place_pointers   (asm_file);
+    asm_file_analize (asm_file);
 }
 
 //=====================================================================================================
      
-void deep_analize_array (file* asm_file, str* data)
+void asm_file_analize (text* asm_file)
 {
     double   cmd_number = 0; 
     double   cmd_code   = 0;
@@ -23,73 +20,93 @@ void deep_analize_array (file* asm_file, str* data)
     char* cmd_ptr   = nullptr;
     char* nmb_ptr   = nullptr;  
     
-    double* tokes_arr = (double*) calloc (asm_file -> size_of_file, sizeof (double)); 
-    assert (tokes_arr != nullptr);
+    double* byte_code = (double*) calloc (asm_file -> size_of_file, sizeof (double)); 
+    assert (byte_code);
 
-    int  idx = 0;
+    int  idx_b_code = 0;
 
     for (int i = 0; i < (asm_file -> number_line); i++)     // цикл по каждой структуре массива структур
     {
-        p_beg_str = (data + i) -> p_begin_str;
+        p_beg_str = (asm_file -> strings + i) -> p_begin_str;
       
-        cmd_ptr   = strtok (p_beg_str, " ,\n,\0");
-        nmb_ptr   = strtok (NULL," ,\n,\0");
+        char** lexemes_ptr = check_lexemes (asm_file, i);
+
+        cmd_ptr   = lexemes_ptr[0];
+        nmb_ptr   = lexemes_ptr[1];
 
         if (nmb_ptr != nullptr) /* if found a number*/
         {
             cmd_len     = nmb_ptr - cmd_ptr - 1;
             cmd_number  = atof (nmb_ptr);
 
-            char* cmd_buffer  = (char*) calloc (cmd_len + 1, sizeof (char)); // +1 for place /0 cause scrmp need /0
-            assert (cmd_buffer != nullptr);
-
-            for (int item = 0; item < cmd_len; item++) 
-                cmd_buffer[item] = p_beg_str[item];
-            
-            cmd_buffer[cmd_len] = '\0';
-
-            cmd_code = assembling (cmd_buffer);
-
-            free (cmd_buffer);
-            cmd_buffer = nullptr;
-
-            tokes_arr[idx] = cmd_code;
-                idx++;
-            tokes_arr[idx] = ' ';
-                idx++;
-            tokes_arr[idx] = cmd_number;
-                idx++;
-            tokes_arr[idx] = ' ';
-                idx++;
+            idx_b_code = create_byte_code (asm_file, cmd_len, cmd_code, cmd_number, i, idx_b_code, nmb_ptr, byte_code);     
         }
 
         else
         {            
-            cmd_len = (data + i) -> str_length;
-
-            char* cmd_buffer = (char*) calloc (cmd_len + 1, sizeof (char));
-            assert(cmd_buffer != nullptr);
-            
-            for (int item = 0; item < cmd_len; item++) 
-                cmd_buffer[item] = p_beg_str[item];
-            
-            cmd_buffer[cmd_len] = '\0';
-            cmd_code = assembling (cmd_buffer);
-            
-            free (cmd_buffer);
-            cmd_buffer = nullptr;   
-            
-            tokes_arr[idx] = cmd_code;
-                idx++;
-            tokes_arr[idx] = ' ';
-                idx++;
+            cmd_len = (asm_file -> strings + i) -> str_length;
+            idx_b_code = create_byte_code (asm_file, cmd_len, cmd_code, cmd_number, i, idx_b_code, nmb_ptr, byte_code);     
         }
+
+        free (lexemes_ptr);
     }
 
-    input_b_file (asm_file, tokes_arr);
+    input_b_file (asm_file, byte_code);
     
-    free (tokes_arr);
-    tokes_arr = nullptr;
+    free (byte_code);
+    byte_code = nullptr;
+}
+
+//=====================================================================================================
+
+int create_byte_code (text* asm_file, int cmd_len, int cmd_code, int cmd_number, int i, int idx_b_code, char* nmb_ptr, double* byte_code)
+{     
+    assert (asm_file);  
+    assert (byte_code);
+
+    char* p_beg_str = (asm_file -> strings + i) -> p_begin_str;
+    assert (p_beg_str);
+
+    char* cmd_buffer  = (char*) calloc (cmd_len + 1, sizeof (char)); // +1 for place /0 cause scrmp need /0
+    assert (cmd_buffer);
+
+    for (int item = 0; item < cmd_len; item++) 
+        cmd_buffer[item] = p_beg_str[item];
+            
+    cmd_buffer[cmd_len] = '\0';
+
+    cmd_code = assembling (cmd_buffer);
+
+    free (cmd_buffer);
+    cmd_buffer = nullptr;
+
+    byte_code[idx_b_code] = cmd_code;
+        idx_b_code++;
+
+    if (nmb_ptr != nullptr)
+    {
+        byte_code[idx_b_code] = cmd_number;
+            idx_b_code++;
+    }
+
+    return idx_b_code;
+}
+
+//=====================================================================================================
+
+char** check_lexemes (text* asm_file, int i)
+{
+    char** lexemes_ptr = (char**) calloc (MAX_CMD, sizeof (char*));
+    char*  p_beg_str   = (asm_file -> strings + i) -> p_begin_str;
+
+    lexemes_ptr [0] = strtok (p_beg_str, " \n\0");
+   
+    for (int i = 1; i < MAX_CMD; i++)
+    {
+        lexemes_ptr [i] = strtok (nullptr, " \n\0");
+    }
+    
+    return lexemes_ptr;
 }
 
 //=====================================================================================================
@@ -98,47 +115,47 @@ double assembling (char* cmd)
 {
     using namespace my_commands;
 
-    if (0) printf ("CACATB\n");
+    if (0) {}
     
-    get_command (push, PUSH)
-    get_command (pop, POP)
-    get_command (add, ADD)
-    get_command (sub, SUB)
-    get_command (div, DIV)
-    get_command (out, OUT)
-    get_command (hlt, HLT)
-    get_command (end, END)
-    get_command (unknown_cmd, UNKNOWN_CMD)
+    GET_COMMAND (push, PUSH)
+    GET_COMMAND (pop, POP)
+    GET_COMMAND (add, ADD)
+    GET_COMMAND (sub, SUB)
+    GET_COMMAND (div, DIV)
+    GET_COMMAND (out, OUT)
+    GET_COMMAND (hlt, HLT)
+    GET_COMMAND (end, END)
+    GET_COMMAND (unknown_cmd, UNKNOWN_CMD)
     
     return -1;
 }
 
 //=====================================================================================================
 
-void input_b_file (file* asm_file, double* tokes_arr)
+void input_b_file (text* asm_file, double* byte_code)
 {
     FILE* file = fopen ("../txt files/asm_binary", "wb");
     assert (file != nullptr);
 
     for (int i = 0; i < asm_file -> size_of_file; i++)
     {
-        printf ("[%lg]\n", *(tokes_arr + i));
+        printf ("[%lg]\n", *(byte_code + i));
     }
    
-    fwrite (tokes_arr, sizeof (double), asm_file -> size_of_file, file);
+    fwrite (byte_code, sizeof (double), asm_file -> size_of_file, file);
 
     fclose (file);
 }
 
 //=====================================================================================================
 
-void assembler_free (char* asm_buffer, str* data)
+void assembler_free (text* asm_file)
 {
-    free (asm_buffer);
-    asm_buffer = nullptr;
+    free (asm_file -> file_buffer);
+    asm_file -> file_buffer = nullptr;
     
-    free (data);
-    data = nullptr;
+    free (asm_file -> strings);
+    asm_file -> strings = nullptr;
 }              
 
 //=====================================================================================================
