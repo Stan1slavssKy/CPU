@@ -10,7 +10,7 @@
 #include <sys/stat.h>  
 #include <ctype.h>
 
-#include "../../Onegin/Onegin.h"
+#include "../libs/Onegin.h"
 
 //=================================================================================
 
@@ -30,21 +30,41 @@ namespace my_commands
     };
 }
 
+enum lexsemes_types
+{
+    COMMAND  = 1,
+    NUMBER   = 2,
+    REGISTER = 3,
+    LABEL    = 4
+};
+
 //=================================================================================
 
-#define get_command(cmd_compared, CMD_ENUM)       \
+struct lexsemes 
+{
+    int   lexsem_name;
+    char* lexsem;
+};
+
+//=================================================================================
+
+#define MAX_CMD 4
+
+#define GET_COMMAND(cmd_compared, CMD_ENUM)       \
     else if (!strcmp(cmd, #cmd_compared))         \
         return CMD_ENUM;
 
 //=================================================================================
 
-str* assembler_read (file* asm_file, char* file_name);
-void assembler_free (char* asm_buffer, str* data);
+void assembler_read (text* asm_file, char* file_name);
+void assembler_free (text* asm_file);
 
-void    read_asm     (char* file_name, file* asm_file);
-void    deep_analize_array (file* asm_file, str* data);
-void    input_b_file (file* asm_file, double* tokes_arr);
+void    read_asm     (char* file_name, text* asm_file);
+void asm_file_analize (text* asm_file, int nmb_spaces);
+void    input_b_file (text* asm_file, double* byte_code);
 double  assembling   (char* cmd);
+int create_byte_code (text* asm_file, int cmd_len, int cmd_code, int cmd_number, int i, int idx_b_code, char* nmb_ptr, double* byte_code); 
+char** check_lexemes (text* asm_file, int i);
 
 //=================================================================================
 

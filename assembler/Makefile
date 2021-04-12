@@ -4,8 +4,8 @@ WARNINGS  = -Wall -Wextra
 DEBUG_MODE   = -g3 -O0 
 RELEASE_MODE = -g0 -O3
 
-SOURCE  = assembler_main.cpp assembler.cpp 
-OBJECT  = assembler_main.o   assembler.o 
+SOURCE  = assembler_main.cpp assembler.cpp ../libs/Onegin.cpp
+OBJECT  = assembler_main.o   assembler.o  ../libs/Onegin.o
 OUTPUT  = assembler 
 
 INCLUDE_DIR = ../../Onegin
@@ -20,13 +20,7 @@ launch: $(OUTPUT)
 	./$(OUTPUT)"../txt files/asm"
 
 $(OUTPUT): $(OBJECT)
-	$(CXX) $(WARNINGS) $(DEBUG_MODE) $^ -L$(INCLUDE_DIR) -l$(INCLUDE) -o $(OUTPUT)
-
-main.o: main_cpu.cpp
-	$(CXX) $(WARNINGS) $(DEBUG_MODE) main_cpu.cpp -c
-
-stack.o: cpu.cpp
-	$(CXX) $(WARNINGS) $(DEBUG_MODE) cpu.cpp -c
+	$(CXX) $(WARNINGS) $(DEBUG_MODE) $^ -o $(OUTPUT)
 
 clean:
 	rm -f *.o *.a $(OUTPUT)
