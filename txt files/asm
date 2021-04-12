@@ -1,7 +1,11 @@
-push 500000
+div
 pop 4
 add
 push 5
 push 4
-div
+div    
+hlt
+push 
+add
+add
 hlt
