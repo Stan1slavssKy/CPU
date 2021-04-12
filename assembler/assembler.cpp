@@ -3,13 +3,12 @@
 void assembler_read (text* asm_file, char* file_name)
 {
     input_inform (file_name, asm_file);
-    int nmb_spaces = skip_spaces (asm_file);
-    asm_file_analize (asm_file, nmb_spaces);
+    asm_file_analize (asm_file);
 }
 
 //=====================================================================================================
 
-void asm_file_analize (text* asm_file, int nmb_spaces)
+void asm_file_analize (text* asm_file)
 {
     char*   buffer    = asm_file -> file_buffer;
     double* byte_code = (double*) calloc (asm_file -> size_of_file, sizeof (double));
@@ -17,41 +16,37 @@ void asm_file_analize (text* asm_file, int nmb_spaces)
     int idx     = 0;
     int counter = 0;
 
-    char* cmd = strtok (buffer, " ");
+    char* cmd = strtok (buffer, " \n");
     printf ("%s", cmd);
 
-    byte_code[idx++] = ' ';
+    //byte_code[idx++] = ' ';
     byte_code[idx++] = assembling (cmd);
 
     while (1)
     {
-        cmd = strtok (nullptr, " ");
+        cmd = strtok (nullptr, " \n");
+        if (cmd == nullptr)
+        {
+            break;
+        }
         printf ("%s", cmd);
 
         if (isdigit (*cmd))
         {
             double nmb = atof (cmd);
-            byte_code[idx++] = ' ';
+            //byte_code[idx++] = ' ';
             byte_code[idx++] = nmb;
         }
         else
         {
-            byte_code[idx++] = ' ';
+            //byte_code[idx++] = ' ';
             byte_code[idx++] = assembling (cmd);
         }
 
-        counter++;
-        if (counter == nmb_spaces)
-        {
-            break;
-        }
     }
 
     printf ("\n");
 
-    for (int i = 0; i < asm_file -> size_of_file; i++)
-    printf ("{%lg}\n", byte_code[i]);
-    
     input_b_file (asm_file, byte_code);
     free (byte_code);
 }  
@@ -83,10 +78,13 @@ void input_b_file (text* asm_file, double* byte_code)
 {
     FILE* file = fopen ("../txt files/asm_binary", "wb");
     assert (file != nullptr);
-   
-    fwrite (byte_code, sizeof (double), asm_file -> size_of_file, file);
 
-    fclose (file);
+    for (int i = 0; i < asm_file -> size_of_file; i++)
+        printf ("{%lg}\n", byte_code[i]);
+
+    fwrite ((char*)byte_code, sizeof (char), asm_file -> size_of_file * 8, file);
+
+    fclose(file);
 }
 
 //=====================================================================================================
