@@ -61,8 +61,6 @@ void asm_file_analize (text* asm_file, lexsemes* cmd_lexem) // push 5
 
 double asm_c::assembling (lexsemes* cmd_lexem, char* cmd, int number)
 {
-    //using namespace my_commands;
-
     if (cmd != nullptr)
     {
         if (0) {} 
@@ -72,6 +70,7 @@ double asm_c::assembling (lexsemes* cmd_lexem, char* cmd, int number)
         GET_COMMAND (add, ADD, 0)
         GET_COMMAND (sub, SUB, 0)
         GET_COMMAND (div, DIV, 0)
+        GET_COMMAND (mul, MUL, 0)
         GET_COMMAND (out, OUT, 0)
         GET_COMMAND (hlt, HLT, 0)
         GET_COMMAND (end, END, 0)
@@ -95,12 +94,14 @@ void asm_c::checking_lex_type (lexsemes* cmd_lexem, int CMD_ENUM, int number)
         switch (CMD_ENUM)
         {
             TYPE_COMMAND (PUSH, N_COMMAND)
-            TYPE_COMMAND (DIV,  N_COMMAND)
-            TYPE_COMMAND (SUB,  N_COMMAND)
+            TYPE_COMMAND (DIV,    COMMAND)
+            TYPE_COMMAND (MUL,    COMMAND)
+            TYPE_COMMAND (SUB,    COMMAND)
             TYPE_COMMAND (POP,    COMMAND)
             TYPE_COMMAND (ADD,    COMMAND)
             TYPE_COMMAND (OUT,    COMMAND)
             TYPE_COMMAND (HLT,    COMMAND)
+            TYPE_COMMAND (END,    COMMAND)
 
             default:
             {

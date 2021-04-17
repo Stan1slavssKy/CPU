@@ -11,29 +11,9 @@
 #include <ctype.h>
 
 #include "../libs/Onegin.h"
+#include "../libs/CPU_commands.h"
 
 //=================================================================================
-
-namespace assembafaf
-{
-    const int SA = 1;
-}
-
-namespace asm_c
-{
-    enum commands
-    {
-        PUSH = 1,
-        POP  = 2,
-        ADD  = 3,
-        SUB  = 4,
-        DIV  = 5,
-        OUT  = 6,
-        HLT  = 7,
-        END  = 8,
-        UNKNOWN_CMD = -5
-    };
-}
 
 enum lexsemes_names
 {
@@ -53,8 +33,6 @@ struct lexsemes
 };
 
 //=================================================================================
-
-#define MAX_CMD 4 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #define GET_COMMAND(cmd_compared, CMD_ENUM, number)      \
     else if (!strcmp(cmd, #cmd_compared))                \
