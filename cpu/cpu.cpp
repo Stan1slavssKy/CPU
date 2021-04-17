@@ -1,69 +1,133 @@
 #include "cpu.h"
 
-void CPU_construct ()
+void CPU_construct (CPU_t* cpu, char* file_name)
 {   
-    FILE* file = fopen ("../txt files/asm_binary", "rb");
-    assert (file != nullptr);
-
-    int f_size = file_size () / sizeof (double);
-    int n_cmd  = f_size;
-
-    double* temp_buffer = (double*) calloc (f_size, sizeof (double));
-    assert (temp_buffer != nullptr);
-
-    fread (temp_buffer, sizeof (double), n_cmd, file);
-    f_size /= 2;
+    stack_constr(stk, 2);
+    cpu -> stack = &stk;
     
-    double* buffer      = (double*) calloc (f_size, sizeof (double));
-    assert (buffer != nullptr);
+    CPU_read_file (cpu, file_name);
+    asm_c::defining_commands (cpu);
 
-    //удаляем пробелы 
-    for (int i = 0; i < f_size; i++)
-    {
-        buffer[i] = temp_buffer[i * 2];
-    }
+    stack_dump (cpu -> stack);
+    stack_destruct (cpu -> stack);
+}
 
-    for (int i = 0; i < f_size; i++)
-    {
-        printf ("[%d]%lg\n", i, *(buffer + i));
-    }
+//=====================================================================================================
 
+void CPU_read_file (CPU_t* cpu, char* file_name)
+{
+    assert (cpu);
+    assert (cpu -> stack);
+    assert (file_name);
+
+    FILE* file = fopen (file_name, "rb");
+    assert (file);
+
+    int size_of_file = file_size (file_name);
     
+    double* file_buffer  = (double*) calloc (size_of_file, sizeof(double));
+    assert (file_buffer);
+
+    cpu -> byte_code = file_buffer;
+
+    fread  (file_buffer, sizeof (char), size_of_file, file);
     fclose (file);
-    free   (buffer);
-    free   (temp_buffer);
-}
 
-//=====================================================================================================
-
-int file_size ()
-{
-    struct stat information_buffer = {};
-
-    stat   ("../txt files/asm_binary", &information_buffer);
-    printf ("Size of \"%s\" is: %ld bytes.\n", "asm_binary", information_buffer.st_size);
-
-    return information_buffer.st_size;
-}
-
-//=====================================================================================================
-
-void defining_commands (double* buffer, int n_cmd)
-{
-    for (int i = 0; i < n_cmd; i++)
+    for (int i = 0; i < size_of_file / 8; i++)
     {
-        double command = buffer[i];
-        switch (command)
+        printf ("[%lg] ", file_buffer [i]);
+    }
+
+    printf ("\n");
+}
+
+//=====================================================================================================
+
+int asm_c::defining_commands (CPU_t* cpu)
+{
+    assert (cpu);
+    assert (cpu -> stack);
+    assert (cpu -> byte_code);
+    
+    double* buffer = cpu -> byte_code;
+    
+    double x1  = 0,
+           x2  = 0,
+           res = 0;
+
+    for (int i = 0; buffer[i] != 0 ; i++)
+    {
+        double cmd  = buffer [i];
+
+        switch ((int) cmd)
         {
-        case  constant-expression :
-             code 
+        case PUSH:
+            stack_push (cpu -> stack, buffer[++i]);
+            print_array (cpu -> stack);
             break;
+
+        case POP:
+            res = stack_pop (cpu -> stack);
+            printf ("\n\t\tNumber is %lg\n\n", res);
+            break;
+
+        case ADD:
+            x1  = stack_pop (cpu -> stack);
+            x2  = stack_pop (cpu -> stack);
+            res = x1 + x2;
+            
+            stack_push (cpu -> stack, res);
+            print_array (cpu -> stack);  
+            break;
+
+        case SUB:
+            x1  = stack_pop (cpu -> stack);
+            x2  = stack_pop (cpu -> stack);
+            res = x1 - x2;
+            
+            stack_push (cpu -> stack, res);
+            print_array (cpu -> stack);  
+            break;
+
+        case DIV:
+            x1  = stack_pop (cpu -> stack);
+            x2  = stack_pop (cpu -> stack);
+            res = x1 / x2;
+            
+            stack_push (cpu -> stack, res); 
+            print_array (cpu -> stack); 
+            break;
+
+        case MUL:
+            x1  = stack_pop (cpu -> stack);
+            x2  = stack_pop (cpu -> stack);
+            res = x1 * x2;
         
-        default:
+            stack_push (cpu -> stack, res); 
+            print_array (cpu -> stack); 
             break;
+       
+        case END:
+            return 0;
+
+
+        default:
+            printf ("Error CPU don't know your command:(\n");
+            return -1;
         }
     }
-    return;
+
+    return 0;
+}
+
+//=====================================================================================================
+
+void CPU_destruct (CPU_t* cpu)
+{
+    assert (cpu);
+    assert (cpu -> byte_code);
+
+    free (cpu -> byte_code);
 }
 
 //=====================================================================================================
