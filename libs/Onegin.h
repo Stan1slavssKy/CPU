@@ -18,7 +18,8 @@ struct text
     int   number_line;
     char* file_buffer;
 
-    struct str*   strings;
+    struct str*      strings;
+    //struct lexsemes*  lexsem;
 };
 //сделать флаг который будет выбирать структуру по надобности
 
@@ -27,6 +28,12 @@ struct str
     char* p_begin_str;
     int   str_length;
 };
+
+/*struct lexsemes 
+{
+    int   lexsem_name;
+    char* lexsem;
+};*/
 
 //------------------------------------------------------------------------------------------------
 

@@ -181,3 +181,14 @@ char* console_input (int argc, char* argv[])
 }
 
 //------------------------------------------------------------------------------------------------
+
+/*void lexsemes_parsing (text* text_info) // push 5 pop 4 add
+{
+    assert (text_info);
+    assert (text_info -> file_buffer);
+
+    text_info -> lexsem = (lexsemes*) calloc (text_info -> size_of_file, sizeof (lexsemes));
+    char* buffer = text_info -> file_buffer;
+
+    free (text_info -> lexsem); // 1111111111111111111111111111
+}*/
