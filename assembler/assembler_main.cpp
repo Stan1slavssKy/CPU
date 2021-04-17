@@ -2,7 +2,7 @@
 
 int main (int argc, char* argv[])
 {
-    struct text asm_file = {};
+    text asm_file = {};
     char* file_name = console_input (argc, argv);
 
     assembler_read (&asm_file, file_name);

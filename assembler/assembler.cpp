@@ -2,13 +2,19 @@
 
 void assembler_read (text* asm_file, char* file_name)
 {
+    //ASSERT
     input_inform (file_name, asm_file);
-    asm_file_analize (asm_file);
+    
+    lexsemes* cmd_lexem = (lexsemes*) calloc (asm_file -> size_of_file, sizeof (lexsemes));
+   // ASSERT
+    
+    asm_file_analize (asm_file, cmd_lexem);
+    free (cmd_lexem);
 }
 
 //=====================================================================================================
 
-void asm_file_analize (text* asm_file)
+void asm_file_analize (text* asm_file, lexsemes* cmd_lexem) // push 5
 {
     char*   buffer    = asm_file -> file_buffer;
     double* byte_code = (double*) calloc (asm_file -> size_of_file, sizeof (double));
@@ -17,10 +23,10 @@ void asm_file_analize (text* asm_file)
     int counter = 0;
 
     char* cmd = strtok (buffer, " \n");
+    cmd_lexem -> lexsem_name = cmd;
     printf ("%s", cmd);
 
-    //byte_code[idx++] = ' ';
-    byte_code[idx++] = assembling (cmd);
+    byte_code[idx++] = asm_c::assembling (cmd_lexem, cmd, 0);
 
     while (1)
     {
@@ -29,20 +35,20 @@ void asm_file_analize (text* asm_file)
         {
             break;
         }
+
+        cmd_lexem -> lexsem_name = cmd;
         printf ("%s", cmd);
 
         if (isdigit (*cmd))
         {
             double nmb = atof (cmd);
-            //byte_code[idx++] = ' ';
             byte_code[idx++] = nmb;
+            asm_c::assembling (cmd_lexem, nullptr, nmb);
         }
         else
         {
-            //byte_code[idx++] = ' ';
-            byte_code[idx++] = assembling (cmd);
+            byte_code[idx++] = asm_c::assembling (cmd_lexem, cmd, 0);
         }
-
     }
 
     printf ("\n");
@@ -53,23 +59,60 @@ void asm_file_analize (text* asm_file)
 
 //=====================================================================================================
 
-double assembling (char* cmd)
+double asm_c::assembling (lexsemes* cmd_lexem, char* cmd, int number)
 {
-    using namespace my_commands;
+    //using namespace my_commands;
 
-    if (0) {}
-    
-    GET_COMMAND (push, PUSH)
-    GET_COMMAND (pop, POP)
-    GET_COMMAND (add, ADD)
-    GET_COMMAND (sub, SUB)
-    GET_COMMAND (div, DIV)
-    GET_COMMAND (out, OUT)
-    GET_COMMAND (hlt, HLT)
-    GET_COMMAND (end, END)
-    GET_COMMAND (unknown_cmd, UNKNOWN_CMD)
-    
+    if (cmd != nullptr)
+    {
+        if (0) {} 
+
+        GET_COMMAND (push, PUSH, 0)
+        GET_COMMAND (pop, POP, 0)
+        GET_COMMAND (add, ADD, 0)
+        GET_COMMAND (sub, SUB, 0)
+        GET_COMMAND (div, DIV, 0)
+        GET_COMMAND (out, OUT, 0)
+        GET_COMMAND (hlt, HLT, 0)
+        GET_COMMAND (end, END, 0)
+        GET_COMMAND (unknown_cmd, UNKNOWN_CMD, 0)
+    }
+
+    else 
+    {                                                    
+        checking_lex_type (cmd_lexem, NUMBER, number);                            
+    } 
+
     return -1;
+}
+
+//=====================================================================================================
+
+void asm_c::checking_lex_type (lexsemes* cmd_lexem, int CMD_ENUM, int number)
+{
+    if (CMD_ENUM != NUMBER)
+    {
+        switch (CMD_ENUM)
+        {
+            TYPE_COMMAND (PUSH, N_COMMAND)
+            TYPE_COMMAND (DIV,  N_COMMAND)
+            TYPE_COMMAND (SUB,  N_COMMAND)
+            TYPE_COMMAND (POP,    COMMAND)
+            TYPE_COMMAND (ADD,    COMMAND)
+            TYPE_COMMAND (OUT,    COMMAND)
+            TYPE_COMMAND (HLT,    COMMAND)
+
+            default:
+            {
+                printf ("Error in checking_lex_type\n");
+            }
+        }
+    }
+
+    else
+    {
+        cmd_lexem -> lexsem_type = NUMBER;
+    }
 }
 
 //=====================================================================================================
@@ -77,12 +120,12 @@ double assembling (char* cmd)
 void input_b_file (text* asm_file, double* byte_code)
 {
     FILE* file = fopen ("../txt files/asm_binary", "wb");
-    assert (file != nullptr);
+    assert (file);
 
     for (int i = 0; i < asm_file -> size_of_file; i++)
         printf ("{%lg}\n", byte_code[i]);
 
-    fwrite ((char*)byte_code, sizeof (char), asm_file -> size_of_file * 8, file);
+    fwrite (byte_code, sizeof (double), asm_file -> size_of_file, file);
 
     fclose(file);
 }
