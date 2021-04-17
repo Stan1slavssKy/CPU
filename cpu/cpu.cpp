@@ -32,13 +32,6 @@ void CPU_read_file (CPU_t* cpu, char* file_name)
 
     fread  (file_buffer, sizeof (char), size_of_file, file);
     fclose (file);
-
-    for (int i = 0; i < size_of_file / 8; i++)
-    {
-        printf ("[%lg] ", file_buffer [i]);
-    }
-
-    printf ("\n");
 }
 
 //=====================================================================================================
@@ -49,6 +42,9 @@ int asm_c::defining_commands (CPU_t* cpu)
     assert (cpu -> stack);
     assert (cpu -> byte_code);
     
+    FILE* cpu_file = fopen ("../txt files/cpu_dump", "wb"); 
+    assert (cpu_file);
+
     double* buffer = cpu -> byte_code;
     
     double x1  = 0,
@@ -63,12 +59,13 @@ int asm_c::defining_commands (CPU_t* cpu)
         {
         case PUSH:
             stack_push (cpu -> stack, buffer[++i]);
-            print_array (cpu -> stack);
+            fprintf (cpu_file, "\t\tpush %lg:\n", buffer[i]);
+            cpu_print (cpu, cpu_file);
             break;
 
         case POP:
             res = stack_pop (cpu -> stack);
-            printf ("\n\t\tNumber is %lg\n\n", res);
+            fprintf (cpu_file, "\n\t\tpop %lg\n", res);
             break;
 
         case ADD:
@@ -77,25 +74,28 @@ int asm_c::defining_commands (CPU_t* cpu)
             res = x1 + x2;
             
             stack_push (cpu -> stack, res);
-            print_array (cpu -> stack);  
+            fprintf (cpu_file, "\t\tadd %lg %lg:\n", x2, x1);
+            cpu_print (cpu, cpu_file); 
             break;
 
         case SUB:
             x1  = stack_pop (cpu -> stack);
             x2  = stack_pop (cpu -> stack);
-            res = x1 - x2;
+            res = x2 - x1;
             
             stack_push (cpu -> stack, res);
-            print_array (cpu -> stack);  
+            fprintf (cpu_file, "\t\tsub %lg %lg\n", x2, x1);
+            cpu_print (cpu, cpu_file); 
             break;
 
         case DIV:
             x1  = stack_pop (cpu -> stack);
             x2  = stack_pop (cpu -> stack);
-            res = x1 / x2;
+            res = x2 / x1;
             
             stack_push (cpu -> stack, res); 
-            print_array (cpu -> stack); 
+            fprintf (cpu_file, "\t\tdiv %lg %lg\n", x2, x1);
+            cpu_print (cpu, cpu_file);
             break;
 
         case MUL:
@@ -104,18 +104,31 @@ int asm_c::defining_commands (CPU_t* cpu)
             res = x1 * x2;
         
             stack_push (cpu -> stack, res); 
-            print_array (cpu -> stack); 
+            fprintf (cpu_file, "\t\tmul %lg %lg\n", x2, x1);
+            cpu_print (cpu, cpu_file);
             break;
-       
+
+        case OUT:
+            res = stack_pop (cpu -> stack);
+
+            stack_push (cpu -> stack, res);
+            fprintf (cpu_file, "\t\tout %lg\n", res);
+            cpu_print (cpu, cpu_file);
+            break; 
+
         case END:
             return 0;
 
+        case UNKNOWN_CMD:
+            return -1;
 
         default:
-            printf ("Error CPU don't know your command:(\n");
-            return -1;
+            fprintf (cpu_file, "Error CPU don't know your command:(\n");
+            return -2;
         }
     }
+
+    fclose (cpu_file);
 
     return 0;
 }
@@ -128,6 +141,16 @@ void CPU_destruct (CPU_t* cpu)
     assert (cpu -> byte_code);
 
     free (cpu -> byte_code);
+}
+
+//=====================================================================================================
+
+void cpu_print (CPU_t* cpu, FILE* cpu_file)
+{
+    for (int i = 0; i < cpu -> stack -> size; i++) 
+        fprintf (cpu_file, "\t\t[%d]: %f\n", i, *((cpu -> stack) -> data + i)); 
+
+    printf ("\n");
 }
 
 //=====================================================================================================
