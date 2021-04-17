@@ -1,11 +1,9 @@
-div
-pop 4
-add
-push 5
+
+push 1
 push 4
 div    
-hlt
-push 
-add
-add
-hlt
+push 5
+push 5 
+mul
+pop
+end
