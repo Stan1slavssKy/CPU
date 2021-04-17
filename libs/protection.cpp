@@ -156,7 +156,7 @@ void stack_dump (Stack_t* stack)
 void print_array (Stack_t* stack)
 {
     #ifdef DOUBLE_TYPE
-        for (int i = 0; i < stack -> capacity; i++) 
+        for (int i = 0; i < stack -> size; i++) 
             printf ("\t\t[%d]: %f\n", i, *(stack -> data + i)); 
     #else
         #ifdef INT_TYPE
@@ -164,6 +164,7 @@ void print_array (Stack_t* stack)
                 printf ("\t\t[%d]: %d\n", i, *(stack -> data + i));
         #endif
     #endif
+    printf ("\n");
 }
 
 //-------------------------------------------------------------------------------------------------------------
