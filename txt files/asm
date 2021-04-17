@@ -5,5 +5,5 @@ div
 push 5
 push 5 
 mul
-pop
+out
 end
