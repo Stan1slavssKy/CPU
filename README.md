@@ -5,7 +5,7 @@ Then you need to compile assembler and then cpu.
 
 You can do this like that: 
                           
-                           cd assemler
+                           cd assemиler
                            make
                            cd ..
                            cd cpu   
