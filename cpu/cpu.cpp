@@ -6,7 +6,7 @@ void CPU_construct (CPU_t* cpu, char* file_name)
     cpu -> stack = &stk;
     
     CPU_read_file (cpu, file_name);
-    asm_c::defining_commands (cpu);
+    asm_cmd::determine_commands (cpu);
 
     stack_dump (cpu -> stack);
     stack_destruct (cpu -> stack);
@@ -36,7 +36,7 @@ void CPU_read_file (CPU_t* cpu, char* file_name)
 
 //=====================================================================================================
 
-int asm_c::defining_commands (CPU_t* cpu)
+int asm_cmd::determine_commands (CPU_t* cpu)
 {
     assert (cpu);
     assert (cpu -> stack);
@@ -141,6 +141,7 @@ void CPU_destruct (CPU_t* cpu)
     assert (cpu -> byte_code);
 
     free (cpu -> byte_code);
+    cpu -> byte_code = nullptr;
 }
 
 //=====================================================================================================

@@ -31,9 +31,9 @@ void CPU_read_file (CPU_t* cpu, char* file_name);
 void CPU_destruct  (CPU_t* cpu);
 void cpu_print     (CPU_t* cpu, FILE* cpu_file);
 
-namespace asm_c
+namespace asm_cmd
 {   
-    int defining_commands (CPU_t* cpu);
+    int determine_commands (CPU_t* cpu);
 }
 
 //===========================================================================
