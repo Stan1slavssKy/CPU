@@ -2,56 +2,46 @@
 
 void assembler_read (text* asm_file, char* file_name)
 {
-    //ASSERT
+    assert (file_name);
+    assert (asm_file);
+
     input_inform (file_name, asm_file);
-    
-    lexsemes* cmd_lexem = (lexsemes*) calloc (asm_file -> size_of_file, sizeof (lexsemes));
-   // ASSERT
-    
-    asm_file_analize (asm_file, cmd_lexem);
-    free (cmd_lexem);
+    asm_file_analize (asm_file);
 }
 
 //=====================================================================================================
 
-void asm_file_analize (text* asm_file, lexsemes* cmd_lexem) // push 5
+void asm_file_analize (text* asm_file) 
 {
+    assert (asm_file);
+    assert (asm_file -> file_buffer);
+   
+    char*   cmd       = nullptr;
+    double  nmb       = 0;
     char*   buffer    = asm_file -> file_buffer;
-    double* byte_code = (double*) calloc (asm_file -> size_of_file, sizeof (double));
     
-    int idx     = 0;
-    int counter = 0;
+    double* byte_code = (double*) calloc (asm_file -> size_of_file, sizeof (double));
+    assert (byte_code);
+   
+    parsing_lexems (asm_file);
+    assert (asm_file -> lexem);
 
-    char* cmd = strtok (buffer, " \n");
-    cmd_lexem -> lexsem_name = cmd;
-    printf ("%s", cmd);
-
-    byte_code[idx++] = asm_c::assembling (cmd_lexem, cmd, 0);
-
-    while (1)
+    for (int i = 0; i < asm_file -> number_lexems; i++)
     {
-        cmd = strtok (nullptr, " \n");
-        if (cmd == nullptr)
-        {
-            break;
-        }
-
-        cmd_lexem -> lexsem_name = cmd;
-        printf ("%s", cmd);
+        cmd = (asm_file -> lexem + i) -> lexem_name;
 
         if (isdigit (*cmd))
         {
-            double nmb = atof (cmd);
-            byte_code[idx++] = nmb;
-            asm_c::assembling (cmd_lexem, nullptr, nmb);
+            nmb = atof (cmd);
+            printf ("nmb is %lg\n", nmb);
+            byte_code [i] = asm_cmd::assembling (asm_file, nullptr, nmb, asm_file -> lexem + i);
         }
         else
-        {
-            byte_code[idx++] = asm_c::assembling (cmd_lexem, cmd, 0);
-        }
+        {  
+            printf ("cmd is %s\n", cmd);
+            byte_code [i] = asm_cmd::assembling (asm_file, cmd, 0, asm_file -> lexem + i);
+        } 
     }
-
-    printf ("\n");
 
     input_b_file (asm_file, byte_code);
     free (byte_code);
@@ -59,7 +49,7 @@ void asm_file_analize (text* asm_file, lexsemes* cmd_lexem) // push 5
 
 //=====================================================================================================
 
-double asm_c::assembling (lexsemes* cmd_lexem, char* cmd, int number)
+double asm_cmd::assembling (text* asm_file, char* cmd, int number, lexemes* lexem_i)
 {
     if (cmd != nullptr)
     {
@@ -79,7 +69,8 @@ double asm_c::assembling (lexsemes* cmd_lexem, char* cmd, int number)
 
     else 
     {                                                    
-        checking_lex_type (cmd_lexem, NUMBER, number);                            
+        checking_lex_type (asm_file, NUMBER, number, lexem_i);    
+        return number;                        
     } 
 
     return -1;
@@ -87,7 +78,7 @@ double asm_c::assembling (lexsemes* cmd_lexem, char* cmd, int number)
 
 //=====================================================================================================
 
-void asm_c::checking_lex_type (lexsemes* cmd_lexem, int CMD_ENUM, int number)
+void asm_cmd::checking_lex_type (text* asm_file, int CMD_ENUM, int number, lexemes* lexem_i)
 {
     if (CMD_ENUM != NUMBER)
     {
@@ -112,7 +103,7 @@ void asm_c::checking_lex_type (lexsemes* cmd_lexem, int CMD_ENUM, int number)
 
     else
     {
-        cmd_lexem -> lexsem_type = NUMBER;
+        lexem_i -> lexem_type = NUMBER;
     }
 }
 
@@ -135,11 +126,13 @@ void input_b_file (text* asm_file, double* byte_code)
 
 void assembler_free (text* asm_file)
 {
-    free (asm_file -> file_buffer);
+    assert (asm_file -> file_buffer);
+    free   (asm_file -> file_buffer);
     asm_file -> file_buffer = nullptr;
     
-    free (asm_file -> strings);
-    asm_file -> strings = nullptr;
+    assert (asm_file -> lexem);
+    free (asm_file -> lexem);
+    asm_file -> lexem = nullptr;
 }              
 
 //=====================================================================================================
