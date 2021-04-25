@@ -3,7 +3,7 @@
 
 //=================================================
 
-namespace asm_c
+namespace asm_cmd
 {
     enum commands
     {

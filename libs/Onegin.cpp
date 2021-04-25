@@ -18,50 +18,6 @@ char* read_file (char* file_name, int size_of_file)
 
 //------------------------------------------------------------------------------------------------
 
-int skip_spaces (text* text_info)
-{
-    assert (text_info);
-    assert (text_info -> file_buffer);
-
-    char* new_buffer = (char*) calloc (text_info -> size_of_file, sizeof (char));
-    char* symbol     = text_info -> file_buffer;
-     
-    int   idx     = 0;
-    int   new_idx = 0;     
-    int   space_counter = 0;
-
-    while (symbol[idx] != '\0')
-    {
-        if (isspace (symbol[idx]))
-        {
-            while (isspace (symbol[idx]))
-                idx++;
-
-            new_buffer[new_idx++] = ' ';
-            new_buffer[new_idx++] = symbol[idx++];
-            
-            space_counter++;
-        }
-
-        else    
-            new_buffer[new_idx++] = symbol[idx++];
-    }
-
-    new_buffer[new_idx] = '\0';
-
-    printf ("[%s]\n", new_buffer);
-
-    free (text_info -> file_buffer);
-    text_info -> file_buffer = nullptr;
-
-    text_info -> file_buffer = new_buffer;
-    
-    space_counter--;
-    return space_counter;
-}
-
-//------------------------------------------------------------------------------------------------
-
 int counter_line (char* file_buffer)
 {
     assert (file_buffer);
@@ -178,6 +134,111 @@ char* console_input (int argc, char* argv[])
     
     printf ("Error: to few or too many arguments.\n");
     return nullptr;
+}
+
+//------------------------------------------------------------------------------------------------
+
+int skip_spaces (text* text_info)
+{
+    assert (text_info);
+    assert (text_info -> file_buffer);
+
+    char* new_buffer = (char*) calloc (text_info -> size_of_file, sizeof (char));
+    char* symbol     = text_info -> file_buffer;
+     
+    int   idx     = 0;
+    int   new_idx = 0;     
+    int   space_counter = 0;
+
+    while (symbol[idx] != '\0')
+    {
+        if (isspace (symbol[idx]))
+        {
+            while (isspace (symbol[idx]))
+                idx++;
+
+            new_buffer[new_idx++] = ' ';
+            new_buffer[new_idx++] = symbol[idx++];
+            
+            space_counter++;
+        }
+
+        else    
+            new_buffer[new_idx++] = symbol[idx++];
+    }
+
+    new_buffer[new_idx] = '\0';
+
+    printf ("[%s]\n", new_buffer);
+
+    free (text_info -> file_buffer);
+    text_info -> file_buffer = nullptr;
+
+    text_info -> file_buffer = new_buffer;
+    
+    space_counter--;
+    return space_counter;
+}
+
+//------------------------------------------------------------------------------------------------
+// делает массив структур лексем и кладет указатель в каждую структуру
+void parsing_lexems (text* text_info)
+{
+    assert (text_info);
+    assert (text_info -> file_buffer);
+
+    char* buffer = text_info -> file_buffer;
+    char* cmd    = nullptr;
+
+    int   nmb_lexems = token_counter (text_info);
+
+    lexemes* lexems_arr = (lexemes*) calloc (nmb_lexems, sizeof (lexemes));
+    assert  (lexems_arr);
+
+    text_info -> lexem = lexems_arr;
+    
+    cmd = strtok (buffer, " \n");
+    (text_info -> lexem) -> lexem_name = cmd;
+    printf ("%s\n", cmd);
+    
+    for (int idx = 1; (cmd = strtok (nullptr, " \n")) != nullptr; idx++)
+    {
+        (text_info -> lexem + idx) -> lexem_name = cmd;
+        printf ("%s\n", (text_info -> lexem + idx) -> lexem_name);
+    }
+
+    printf ("\n");
+}
+
+//------------------------------------------------------------------------------------------------
+
+int token_counter (text* text_info)
+{
+    assert (text_info);
+    assert (text_info -> file_buffer);
+
+    char* symbol  = text_info -> file_buffer;
+
+    int   idx     = 0;   
+    int   token_counter = 0;
+
+    while (symbol[idx] != '\0') 
+    {
+        if (isspace (symbol[idx]))
+        {
+            while (isspace (symbol[idx]))
+                idx++;
+            
+            token_counter++;
+                  printf ("%c\n", symbol[idx]);
+        }
+        idx++;
+    }
+
+    token_counter--;
+
+    text_info -> number_lexems = token_counter;
+    return token_counter;
 }
 
 //------------------------------------------------------------------------------------------------

@@ -17,9 +17,10 @@ struct text
     int   size_of_file;
     int   number_line;
     char* file_buffer;
-
+    int   number_lexems;
+    
     struct str*      strings;
-    //struct lexsemes*  lexsem;
+    struct lexemes*  lexem;
 };
 //сделать флаг который будет выбирать структуру по надобности
 
@@ -29,36 +30,39 @@ struct str
     int   str_length;
 };
 
-/*struct lexsemes 
+struct lexemes 
 {
-    int   lexsem_name;
-    char* lexsem;
-};*/
+    int   lexem_type;
+    char* lexem_name;
+};
+
+//------------------------------------------------------------------------------------------------
+
+enum lexemes_types
+{
+    COMMAND   = 1111,
+    N_COMMAND = 2222,
+    NUMBER    = 3333,
+    REGISTER  = 4444,
+    LABEL     = 5555
+};
 
 //------------------------------------------------------------------------------------------------
 
 char* console_input (int argc, char* argv[]);
 
-char* read_file (char* file_name, int size_of_file);
+char* read_file    (char* file_name, int size_of_file);
+int   file_size    (char* file_name);
+int  counter_line  (char* file_buffer);
+void input_inform  (char* file_name, text* text_info);
 
-int counter_line (char* file_buffer);
-int file_size      (char* file_name);
+void place_pointers (text* text_info);
+void free_memory    (text* text_info);
+void parsing_lexems (text* text_info);
 
-int direct_comparator  (const void* data1, const void* data2);
-int reverse_comparator (const void* data1, const void* data2);
-void swap_pointers     (struct str* data1, struct str* data2);
+int skip_spaces   (text* text_info);
+int token_counter (text* text_info);
 
-void lexemes_parsing  (struct text* text_info);
-void place_pointers   (struct text* text_info);
-void free_memory      (struct text* text_info);
-void bubble_sort      (struct text* text_info);
-void quick_sort       (struct text* text_info);
-void output           (struct text* text_info);
-void lexemes_counting (struct text* text_info, int index);
-void print_text       (struct text* text_info, FILE* finish_file);
-
-void input_inform  (char* file_name, struct text* text_info);
-int skip_spaces (text* text_info);
 
 #endif
 
