@@ -10,3 +10,4 @@ You can do this like that:
                            cd ..
                            cd cpu   
                            make
+Sorry for two make in one project in next update I promise to fix that.
