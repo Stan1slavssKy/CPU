@@ -18,15 +18,17 @@ void asm_file_analize (text* asm_file)
    
     char*   cmd       = nullptr;
     double  nmb       = 0;
-    char*   buffer    = asm_file -> file_buffer;
     
     double* byte_code = (double*) calloc (asm_file -> size_of_file, sizeof (double));
     assert (byte_code);
    
     parsing_lexems (asm_file);
     assert (asm_file -> lexem);
+    
+    int nmb_lex = asm_file -> number_lexems;
+    int idx     = 0;
 
-    for (int i = 0; i < asm_file -> number_lexems; i++)
+    for (int i = 0; i < nmb_lex; i++)
     {
         cmd = (asm_file -> lexem + i) -> lexem_name;
 
@@ -34,12 +36,29 @@ void asm_file_analize (text* asm_file)
         {
             nmb = atof (cmd);
             printf ("nmb is %lg\n", nmb);
-            byte_code [i] = asm_cmd::assembling (asm_file, nullptr, nmb, asm_file -> lexem + i);
+            byte_code [idx++] = asm_cmd::assembling (asm_file, nullptr, nmb, asm_file -> lexem + i);
         }
         else
         {  
             printf ("cmd is %s\n", cmd);
-            byte_code [i] = asm_cmd::assembling (asm_file, cmd, 0, asm_file -> lexem + i);
+            byte_code [idx++] = asm_cmd::assembling (asm_file, cmd, 0, asm_file -> lexem + i);
+
+            //заполнение флага если он есть
+            if (i < nmb_lex - 1)
+            {
+                char* next_lex = (asm_file -> lexem + i + 1) -> lexem_name;
+                if (isdigit (*next_lex)) // если след лексема число то это не регистр
+                {
+                    byte_code [++idx] = NMB_CMD;
+                    printf ("flag is %lg\n\n", byte_code [idx]);
+                }
+
+                else if (*(next_lex) == 'r') //если так то это регистр
+                {
+                    byte_code [++idx] = REG_CMD;
+                    printf ("reg flag is %lg\n\n", byte_code [idx]);          
+                }
+            }
         } 
     }
 
@@ -64,6 +83,10 @@ double asm_cmd::assembling (text* asm_file, char* cmd, int number, lexemes* lexe
         GET_COMMAND (out, OUT, 0)
         GET_COMMAND (hlt, HLT, 0)
         GET_COMMAND (end, END, 0)
+        GET_COMMAND (rax, RAX, 0)
+        GET_COMMAND (rbx, RBX, 0)
+        GET_COMMAND (rcx, RCX, 0)
+        GET_COMMAND (rdx, RDX, 0)
         GET_COMMAND (unknown_cmd, UNKNOWN_CMD, 0)
     }
 
@@ -93,6 +116,10 @@ void asm_cmd::checking_lex_type (text* asm_file, int CMD_ENUM, int number, lexem
             TYPE_COMMAND (OUT,    COMMAND)
             TYPE_COMMAND (HLT,    COMMAND)
             TYPE_COMMAND (END,    COMMAND)
+            TYPE_COMMAND (RAX,   REGISTER)
+            TYPE_COMMAND (RBX,   REGISTER)
+            TYPE_COMMAND (RCX,   REGISTER)
+            TYPE_COMMAND (RDX,   REGISTER)
 
             default:
             {
