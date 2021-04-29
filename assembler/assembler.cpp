@@ -28,6 +28,8 @@ void asm_file_analize (text* asm_file)
     int nmb_lex = asm_file -> number_lexems;
     int idx     = 0;
 
+    printf ("nmb lex is %d\n\n", nmb_lex); 
+
     for (int i = 0; i < nmb_lex; i++)
     {
         cmd = (asm_file -> lexem + i) -> lexem_name;
@@ -47,16 +49,19 @@ void asm_file_analize (text* asm_file)
             if (i < nmb_lex - 1)
             {
                 char* next_lex = (asm_file -> lexem + i + 1) -> lexem_name;
+                double temp = byte_code [idx];
+
                 if (isdigit (*next_lex)) // если след лексема число то это не регистр
                 {
-                    byte_code [++idx] = NMB_CMD;
+                    byte_code [idx++]   = NMB_CMD;
                     printf ("flag is %lg\n\n", byte_code [idx]);
                 }
 
                 else if (*(next_lex) == 'r') //если так то это регистр
                 {
-                    byte_code [++idx] = REG_CMD;
-                    printf ("reg flag is %lg\n\n", byte_code [idx]);          
+                    byte_code [idx++] = REG_CMD;
+                    printf ("reg flag is before %lg\n\n", byte_code [idx - 1]);  
+                    printf ("reg flag is %lg\n\n", byte_code [idx]);      
                 }
             }
         } 

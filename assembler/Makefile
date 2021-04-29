@@ -14,7 +14,7 @@ INCLUDE     = onegin
 default: valgrind
 
 valgrind: $(OUTPUT)
-	valgrind ./$(OUTPUT)"../txt files/asm"
+	valgrind ./$(OUTPUT)"../txt files/text.asm"
 
 launch: $(OUTPUT)
 	./$(OUTPUT)"../txt files/asm"

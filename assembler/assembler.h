@@ -44,7 +44,6 @@ namespace asm_cmd
 }
 
 int    create_byte_code (text* asm_file, int cmd_len, int cmd_code, int cmd_number, int i, int idx_b_code, char* nmb_ptr, double* byte_code); 
-char** check_lexemes    (text* asm_file, int i);
 
 //=================================================================================
 
