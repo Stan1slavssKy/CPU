@@ -3,7 +3,7 @@ If you want to use this program you need to download directory CPU.
 
 Then you need to compile assembler and then cpu. 
 
-You can do this like that: 
+You can do it like that: 
                           
                            cd assembler
                            make
