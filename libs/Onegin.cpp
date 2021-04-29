@@ -228,14 +228,15 @@ int token_counter (text* text_info)
         {
             while (isspace (symbol[idx]))
                 idx++;
-            
-            token_counter++;
-                  printf ("%c\n", symbol[idx]);
         }
+
+        if (isascii (symbol[idx]) && isspace (symbol[idx + 1]))
+            token_counter++;
+
         idx++;
     }
 
-    token_counter--;
+   // token_counter--;
 
     text_info -> number_lexems = token_counter;
     return token_counter;

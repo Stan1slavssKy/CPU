@@ -38,17 +38,6 @@ struct lexemes
 
 //------------------------------------------------------------------------------------------------
 
-enum lexemes_types
-{
-    COMMAND   = 1111,
-    N_COMMAND = 2222,
-    NUMBER    = 3333,
-    REGISTER  = 4444,
-    LABEL     = 5555
-};
-
-//------------------------------------------------------------------------------------------------
-
 char* console_input (int argc, char* argv[]);
 
 char* read_file    (char* file_name, int size_of_file);
