@@ -2,7 +2,7 @@
 
 # What is this project?
 
-A processor is a project that processes your assembly commands. For example, you enter push 5 and to begin with, this line will be assembled and then processed by my processor, which will create and populate the stack.
+A processor is a project that processes your assembly commands. For example, you enter push 5 and to begin with, this line will be assembled and then processed by my processor, which will create and fill the stack.
 
 # How to use it?
 
