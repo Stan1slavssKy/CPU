@@ -1,5 +1,5 @@
 CXX       = g++
-WARNINGS  = -Wall -Wextra 
+WARNINGS  = -Wall -Wextra
 
 DEBUG_MODE   = -g3 -O0 
 RELEASE_MODE = -g0 -O3

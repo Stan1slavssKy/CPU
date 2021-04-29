@@ -8,7 +8,7 @@ void CPU_construct (CPU_t* cpu, char* file_name)
     CPU_read_file (cpu, file_name);
     asm_cmd::determine_commands (cpu);
 
-    stack_dump (cpu -> stack);
+    stack_dump     (cpu -> stack);
     stack_destruct (cpu -> stack);
 }
 
@@ -48,9 +48,10 @@ int asm_cmd::determine_commands (CPU_t* cpu)
     double* buffer = cpu -> byte_code;
     
     double x1  = 0,
-           x2  = 0,
-           res = 0;
-
+           x2  = 0;
+    double res       = 0,
+           next_code = 0;
+           
     for (int i = 0; buffer[i] != 0 ; i++)
     {
         double cmd  = buffer [i];
@@ -58,14 +59,38 @@ int asm_cmd::determine_commands (CPU_t* cpu)
         switch ((int) cmd)
         {
         case PUSH:
-            stack_push (cpu -> stack, buffer[++i]);
-            fprintf (cpu_file, "\t\tpush %lg:\n", buffer[i]);
-            cpu_print (cpu, cpu_file);
+            next_code = buffer [++i];
+
+            if (next_code == 0) // проверка флага на ноль если так то это число
+            {
+                stack_push (cpu -> stack, buffer[++i]);
+                fprintf (cpu_file, "\t\tpush %lg:\n", buffer[i]);
+                cpu_print (cpu, cpu_file);
+            }
+            else if (next_code == 1) // push register
+            {
+                const char* reg_name = reg_push (cpu, buffer[++i]);
+                fprintf (cpu_file, "\t\tpush from register %s\n", reg_name);
+                cpu_print (cpu, cpu_file);    
+            }
+
             break;
 
         case POP:
-            res = stack_pop (cpu -> stack);
-            fprintf (cpu_file, "\n\t\tpop %lg\n", res);
+            next_code = buffer [++i];
+            
+            if (next_code == 0)
+            {
+                res = stack_pop (cpu -> stack);
+                fprintf (cpu_file, "\n\t\tpop %lg\n", res);
+            }
+            else if (next_code == 1)
+            {
+                const char* reg_name = reg_pop (cpu, buffer[++i]);
+                fprintf (cpu_file, "\t\tpop in register %s\n", reg_name);
+                cpu_print (cpu, cpu_file); 
+            }
+            
             break;
 
         case ADD:
@@ -117,6 +142,7 @@ int asm_cmd::determine_commands (CPU_t* cpu)
             break; 
 
         case END:
+            fprintf (cpu_file, "\t\tend\n");
             return 0;
 
         case UNKNOWN_CMD:
@@ -135,6 +161,74 @@ int asm_cmd::determine_commands (CPU_t* cpu)
 
 //=====================================================================================================
 
+const char* reg_push (CPU_t* cpu, double reg)
+{
+    int number = 0;
+
+    if ((int)reg == RAX)                     
+    {                                  
+        number = (cpu -> regs) -> rax;
+        stack_push (cpu -> stack, number);  
+        return "rax";                   
+    }  
+    else if ((int)reg == RBX)                     
+    {                                  
+        number = (cpu -> regs) -> rbx;
+        stack_push (cpu -> stack, number);  
+        return "rbx";                   
+    }  
+    else if ((int)reg == RCX)                     
+    {                                  
+        number = (cpu -> regs) -> rcx;
+        stack_push (cpu -> stack, number);  
+        return "rcx";                   
+    }  
+    else if ((int)reg == RDX)                     
+    {                                  
+        number = (cpu -> regs) -> rdx;
+        stack_push (cpu -> stack, number);  
+        return "rdx";                   
+    }  
+
+    return "ERROR IN reg_push";
+}
+
+//=====================================================================================================
+  
+const char* reg_pop (CPU_t* cpu, double reg)
+{
+    int number = 0;
+
+    if ((int)reg == RAX)                     
+    {                                  
+        number = stack_pop (cpu -> stack); 
+        (cpu -> regs) -> rax = number; 
+        return "rax";                   
+    }  
+    else if ((int)reg == RBX)                     
+    {                                  
+        number = stack_pop (cpu -> stack); 
+        (cpu -> regs) -> rbx = number;  
+        return "rbx";                   
+    }  
+    else if ((int)reg == RCX)                     
+    {                                  
+        number = stack_pop (cpu -> stack); 
+        (cpu -> regs) -> rcx = number;  
+        return "rcx";                   
+    }  
+    else if ((int)reg == RDX)                     
+    {                                  
+        number = stack_pop (cpu -> stack); 
+        (cpu -> regs) -> rdx = number;  
+        return "rdx";                   
+    }  
+
+    return "ERROR IN reg_pop";
+}
+
+//=====================================================================================================
+  
 void CPU_destruct (CPU_t* cpu)
 {
     assert (cpu);

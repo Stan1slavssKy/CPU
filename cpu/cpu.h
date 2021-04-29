@@ -18,10 +18,23 @@
 
 //===========================================================================
 
+
+//===========================================================================
+
 struct CPU_t 
 {
-    Stack_t* stack;
-    double*  byte_code;
+    Stack_t*   stack;
+    double*    byte_code;
+
+    struct Regist*  regs;
+};
+
+struct Regist
+{
+    int rax = 0;
+    int rbx = 0;
+    int rcx = 0;
+    int rdx = 0;
 };
 
 //===========================================================================
@@ -35,6 +48,9 @@ namespace asm_cmd
 {   
     int determine_commands (CPU_t* cpu);
 }
+
+const char* reg_push (CPU_t* cpu, double reg);
+const char* reg_pop  (CPU_t* cpu, double reg);
 
 //===========================================================================
 
