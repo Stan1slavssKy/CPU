@@ -51,13 +51,17 @@ void asm_cmd::asm_file_analize (text* asm_file, labels* label)
         else
         {  
             printf ("cmd is %s\n", cmd);
+            
+            if ((asm_file -> lexem + i) -> lexem_type == LABEL)
+                continue; 
+
             byte_code [idx++] = asm_cmd::assembling (asm_file, cmd, 0, asm_file -> lexem + i);
 
-            if (strchr(cmd, ':') != nullptr)//пропуск метки
-                continue;
-            
             if (byte_code[idx - 1] == JMP)
+            {
                 idx = label_input (asm_file, label, (asm_file -> lexem + i + 1) -> lexem_name, byte_code, idx, flag_counter);
+                (asm_file -> lexem + i + 1) -> lexem_type = LABEL; 
+            }
 
             int temp = idx;
             idx = flags_input (asm_file, nmb_lex, byte_code, idx, i); //ставим флаг после кманды с регистром
@@ -67,7 +71,7 @@ void asm_cmd::asm_file_analize (text* asm_file, labels* label)
 
     input_b_file (asm_file, byte_code);
     free (byte_code);
-}  
+} 
 
 //=====================================================================================================
 
@@ -87,7 +91,6 @@ int flags_input (text* asm_file, int nmb_lex, double* byte_code, int idx, int i)
         else if (*(next_lex) == 'r') //если так то это регистр
         {
             byte_code [idx++] = REG_CMD;
-            printf ("reg flag is before %lg\n\n", byte_code [idx - 1]);  
             printf ("reg flag is %lg\n\n", byte_code [idx]);      
         }
     }
@@ -102,10 +105,10 @@ int label_input (text* asm_file, labels* label, char* next_cmd, double* byte_cod
     int label_index = 0;
 
     for (int index = 0; index < asm_file -> number_lexems; index++)
-    {
+    { 
         if (!strcmp(((label + index) -> label_name), next_cmd))
         {
-            label_index = (label + index) -> ip;    
+            label_index = (label + index) -> ip - 1;  
             break;
         }
     }
@@ -128,9 +131,10 @@ void checking_label_ip (text* asm_file, labels* label)
     {
         char* lexem = (asm_file -> lexem + i) -> lexem_name;
         int   lex_len = strlen (lexem);
-        
+        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 МОЖНО ПОПРОБОВАТЬ СДЕЛАТЬ СДЕСЬ КАУНТЕР РЕГИСТРОВ ОТ ДЖАМПА ДО САМОЙ МЕТКИ
         if (lexem[lex_len - 1] == ':')
         {
+            (asm_file -> lexem + i) -> lexem_type = LABEL;
             lexem[lex_len - 1] = '\0';
 
             label -> label_name = lexem;
