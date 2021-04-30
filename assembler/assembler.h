@@ -18,7 +18,6 @@
 #define GET_COMMAND(cmd_compared, CMD_ENUM, number)               \
     else if (!strcmp(cmd, #cmd_compared))                         \
     {                                                             \
-        checking_lex_type (asm_file, CMD_ENUM, number, lexem_i) ; \
         return CMD_ENUM;                                          \
     }
 
@@ -30,20 +29,29 @@
 
 //=================================================================================
 
-void assembler_read (text* asm_file, char* file_name);
-void assembler_free (text* asm_file);
+struct labels
+{
+    char* label_name = nullptr;
+    int ip;
+};
 
-void read_asm         (char* file_name, text* asm_file);
-void asm_file_analize (text* asm_file);
-void input_b_file     (text* asm_file, double* byte_code);
+//=================================================================================
+
+int flags_input    (text* asm_file, int nmb_lex, int i, int nmb_flags);
+int  placing_flags (text* asm_file, labels* label, double* byte_code, int nmb_lexems, int i);
+int  label_input   (text* asm_file, labels* label, double* byte_code, char* next_cmd, int i);
+
+void assembler_read (text* asm_file, char* file_name);
+void input_b_file   (text* asm_file, double* byte_code);
+void assembler_free (text* asm_file);
 
 namespace asm_cmd
 {
-    double assembling      (text* asm_file, char* cmd,    int number, lexemes* lexem_i);
-    void checking_lex_type (text* asm_file, int CMD_ENUM, int number, lexemes* lexem_i);
-}
+    void   firs_passing   (text* asm_file, labels* label);
+    void   second_passing (text* asm_file, labels* label);
+    double assembling     (text* asm_file, char* cmd, int number, lexemes* lexem_i);
 
-int    create_byte_code (text* asm_file, int cmd_len, int cmd_code, int cmd_number, int i, int idx_b_code, char* nmb_ptr, double* byte_code); 
+}
 
 //=================================================================================
 
