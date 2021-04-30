@@ -111,7 +111,7 @@ void asm_cmd::second_passing (text* asm_file, labels* label, int nmb_flags)
     int nmb_lexems = asm_file -> number_lexems;
     int number = 0;
     int offset_counter = 0;
-    int endif = 0;
+
     for (int i = 0; i < nmb_lexems + nmb_flags + 2; i++)
     {
         char* lexem_name = (asm_file -> lexem + i - offset_counter) -> lexem_name;
