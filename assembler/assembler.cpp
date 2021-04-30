@@ -13,98 +13,168 @@ void assembler_read (text* asm_file, char* file_name)
     labels* label = (labels*) calloc (asm_file -> number_lexems, sizeof (label));
     assert (label);
     
-    checking_label_ip (asm_file, label);
-    asm_cmd::asm_file_analize (asm_file, label);
+    asm_cmd::firs_passing   (asm_file, label);
+    asm_cmd::second_passing (asm_file, label);
 }
 
 //=====================================================================================================
 
-void asm_cmd::asm_file_analize (text* asm_file, labels* label) 
+void asm_cmd::firs_passing (text* asm_file, labels* label)
 {
     assert (asm_file);
     assert (asm_file -> lexem);
     assert (asm_file -> file_buffer);
    
-    char*   cmd      = nullptr;
-    double  nmb      = 0;
-    
-    double* byte_code = (double*) calloc (asm_file -> size_of_file, sizeof (double));
-    assert (byte_code);
-    
-    int nmb_lex      = asm_file -> number_lexems;
-    int idx          = 0;
-    int flag_counter = 0;
+    int flag_counter = 0;  
+    int nmb_flags = 0;
+    int nmb_lexems   = asm_file -> number_lexems;
 
-    printf ("nmb lex is %d\n\n", nmb_lex); 
+    double number    = 0; 
+    
+    char* cmd = nullptr;
 
-    for (int i = 0; i < nmb_lex; i++)
+    for (int i = 0; i < nmb_lexems; i++)
     {
+        char* lexem = (asm_file -> lexem + i) -> lexem_name;
+        int   lex_len = strlen (lexem);
+        
         cmd = (asm_file -> lexem + i) -> lexem_name;
        
         if (isdigit (*cmd))
         {
-            nmb = atof (cmd);
-            printf ("nmb is %lg\n", nmb);
-            byte_code [idx++] = asm_cmd::assembling (asm_file, nullptr, nmb, asm_file -> lexem + i);
+            number = atof (cmd);
+            printf ("number is %lg\n", number);
+            (asm_file -> lexem + i) -> lexem_type = NUMBER;
         }
 
-        else
-        {  
+        else 
+        {
             printf ("cmd is %s\n", cmd);
-            
-            if ((asm_file -> lexem + i) -> lexem_type == LABEL)
-                continue; 
+            (asm_file -> lexem + i) -> lexem_type = COMMAND;
 
-            byte_code [idx++] = asm_cmd::assembling (asm_file, cmd, 0, asm_file -> lexem + i);
-
-            if (byte_code[idx - 1] == JMP)
+            if (!strcmp (cmd, "push") || !strcmp (cmd, "pop"))
             {
-                idx = label_input (asm_file, label, (asm_file -> lexem + i + 1) -> lexem_name, byte_code, idx, flag_counter);
-                (asm_file -> lexem + i + 1) -> lexem_type = LABEL; 
+                printf ("\t\t\tCMD is %s\n", cmd);
+                nmb_flags = flags_input (asm_file, nmb_lexems, i, nmb_flags);
+                printf ("\t\tNUMBER flagsss IS %d\n", nmb_flags);
             }
+            if (lexem[lex_len - 1] == ':')
+            {
+                (asm_file -> lexem + i) -> lexem_type = LABEL;
+                lexem[lex_len - 1] = '\0';
 
-            int temp = idx;
-            idx = flags_input (asm_file, nmb_lex, byte_code, idx, i); //ставим флаг после кманды с регистром
-            if (idx != temp) flag_counter++;
-        } 
+                label -> label_name = lexem;
+                printf ("\t\tNUMBER FLAGS IS %d\n", nmb_flags);
+                label -> ip = i + nmb_flags;
+            }
+        }
     }
-
-    input_b_file (asm_file, byte_code);
-    free (byte_code);
-} 
+}
+    
 
 //=====================================================================================================
 
-int flags_input (text* asm_file, int nmb_lex, double* byte_code, int idx, int i)
+// проверяет что стоит после push или pop если регистр ставит флаг REG_COMAND, если число - NMB_COMAND
+// возвращает количество флагов
+//!!!!!!!!! СДЕЛАТЬ БЕЗАРГУМЕНТОВЫЙ POP
+
+int flags_input (text* asm_file, int nmb_lex, int i, int nmb_flags)
 {
     if (i < nmb_lex - 1)
     {
         char* next_lex = (asm_file -> lexem + i + 1) -> lexem_name;
-        double temp    = byte_code [idx];
 
         if (isdigit (*next_lex)) // если след лексема число то это не регистр
-        {
-            byte_code [idx++] = NMB_CMD;
-            printf ("flag is %lg\n\n", byte_code [idx]);
-        }
+            (asm_file -> lexem + i) -> lexem_type = REG_COMMAND;
 
         else if (*(next_lex) == 'r') //если так то это регистр
-        {
-            byte_code [idx++] = REG_CMD;
-            printf ("reg flag is %lg\n\n", byte_code [idx]);      
+        {    
+            (asm_file -> lexem + i) -> lexem_type = NMB_COMMAND;
+            nmb_flags++;
         }
     }
-
-    return idx;
+    
+    return nmb_flags;
 }
 
 //=====================================================================================================
 
-int label_input (text* asm_file, labels* label, char* next_cmd, double* byte_code, int idx, int flag_counter)
+void asm_cmd::second_passing (text* asm_file, labels* label)
+{
+    assert (asm_file);
+    assert (asm_file -> lexem);
+    assert (asm_file -> file_buffer);
+
+    double* byte_code = (double*) calloc (asm_file -> size_of_file, sizeof (double));
+    assert (byte_code);
+
+    int nmb_lexems = asm_file -> number_lexems;
+    int number = 0;
+    
+    for (int i = 0; i < nmb_lexems; i++)
+    {
+        char* lexem_name = (asm_file -> lexem + i) -> lexem_name;
+        int   lexem_type = (asm_file -> lexem + i) -> lexem_type;
+
+        if (lexem_type == NUMBER)
+        {
+            number = atof (lexem_name);
+            byte_code [i] = asm_cmd::assembling (asm_file, nullptr, number, asm_file -> lexem + i);
+        }
+
+        else 
+        {
+            if ((asm_file -> lexem + i) -> lexem_type == LABEL)
+                continue; 
+
+            byte_code [i] = asm_cmd::assembling (asm_file, lexem_name, 0, asm_file -> lexem + i);
+            
+            i = placing_flags (asm_file, label, byte_code, nmb_lexems, i);
+
+            if (byte_code[i] == JMP)
+                i = label_input (asm_file, label, byte_code, (asm_file -> lexem + i + 1) -> lexem_name, i); 
+        }
+    }
+
+    input_b_file (asm_file, byte_code);
+    free (byte_code);
+}
+
+//=====================================================================================================
+
+int placing_flags (text* asm_file, labels* label, double* byte_code, int nmb_lexems, int i)
+{
+    if (i < nmb_lexems - 1)
+    {
+        int lex_type = (asm_file -> lexem + i) -> lexem_type;
+
+        if (lex_type == REG_COMMAND) // если след лексема число то это не регистр
+        {
+            byte_code [++i] = REG_FLAG;
+            printf ("flag is %lg\n\n", byte_code [i]);
+        }
+
+        else if (lex_type == NMB_COMMAND) // если след лексема число то это не регистр
+        {
+            byte_code [++i] = NMB_FLAG;
+            printf ("flag is %lg\n\n", byte_code [i]);
+        }
+        //здесь можно еще один иф для без аргументного pop
+    }
+
+    return i;
+}
+
+//=====================================================================================================
+
+// Проходится по всему массиву структур чтобы найти индекс нашей метки затем кладет в байткод айпи куда джампится
+
+int label_input (text* asm_file, labels* label, double* byte_code, char* next_cmd, int i)
 {
     int label_index = 0;
+    int nmb_lexems  = asm_file -> number_lexems;
 
-    for (int index = 0; index < asm_file -> number_lexems; index++)
+    for (int index = 0; index < nmb_lexems; index++)
     { 
         if (!strcmp(((label + index) -> label_name), next_cmd))
         {
@@ -113,34 +183,9 @@ int label_input (text* asm_file, labels* label, char* next_cmd, double* byte_cod
         }
     }
 
-    byte_code[idx + flag_counter] = label_index;
-    idx++;
-    
-    return idx;
-}
+    byte_code [++i] = label_index;
 
-//=====================================================================================================
-
-void checking_label_ip (text* asm_file, labels* label)
-{
-    assert (asm_file);
-    assert (asm_file -> file_buffer);
-    assert (asm_file -> lexem);
-
-    for (int i = 0; i < asm_file -> number_lexems; i++)
-    {
-        char* lexem = (asm_file -> lexem + i) -> lexem_name;
-        int   lex_len = strlen (lexem);
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1 МОЖНО ПОПРОБОВАТЬ СДЕЛАТЬ СДЕСЬ КАУНТЕР РЕГИСТРОВ ОТ ДЖАМПА ДО САМОЙ МЕТКИ
-        if (lexem[lex_len - 1] == ':')
-        {
-            (asm_file -> lexem + i) -> lexem_type = LABEL;
-            lexem[lex_len - 1] = '\0';
-
-            label -> label_name = lexem;
-            label -> ip = i;//1111111111111111111111111111
-        }
-    }
+    return i;
 }
 
 //=====================================================================================================
@@ -149,7 +194,7 @@ double asm_cmd::assembling (text* asm_file, char* cmd, int number, lexemes* lexe
 {
     if (cmd != nullptr)
     {
-        if (0) {} 
+        if (false) {} 
 
         GET_COMMAND (push, PUSH, 0)
         GET_COMMAND (pop, POP, 0)
@@ -168,50 +213,12 @@ double asm_cmd::assembling (text* asm_file, char* cmd, int number, lexemes* lexe
         GET_COMMAND (unknown_cmd, UNKNOWN_CMD, 0)
     }
 
-    else 
-    {                                                    
-        checking_lex_type (asm_file, NUMBER, number, lexem_i);    
+    else if (number != 0)             
         return number;                        
-    } 
+    else 
+        printf ("\t\tError cmd is {%s}\n\n", cmd);
     
-    printf ("\t\tError cmd is {%s}\n\n", cmd);
     return -1;
-}
-
-//=====================================================================================================
-
-void asm_cmd::checking_lex_type (text* asm_file, int CMD_ENUM, int number, lexemes* lexem_i)
-{
-    if (CMD_ENUM != NUMBER)
-    {
-        switch (CMD_ENUM)
-        {
-            TYPE_COMMAND (PUSH, N_COMMAND)
-            TYPE_COMMAND (DIV,    COMMAND)
-            TYPE_COMMAND (MUL,    COMMAND)
-            TYPE_COMMAND (SUB,    COMMAND)
-            TYPE_COMMAND (POP,    COMMAND)
-            TYPE_COMMAND (ADD,    COMMAND)
-            TYPE_COMMAND (OUT,    COMMAND)
-            TYPE_COMMAND (HLT,    COMMAND)
-            TYPE_COMMAND (END,    COMMAND)
-            TYPE_COMMAND (RAX,   REGISTER)
-            TYPE_COMMAND (RBX,   REGISTER)
-            TYPE_COMMAND (RCX,   REGISTER)
-            TYPE_COMMAND (RDX,   REGISTER)
-            TYPE_COMMAND (JMP,   COMMAND)
-
-            default:
-            {
-                printf ("Error in checking_lex_type\n");
-            }
-        }
-    }
-
-    else
-    {
-        lexem_i -> lexem_type = NUMBER;
-    }
 }
 
 //=====================================================================================================
