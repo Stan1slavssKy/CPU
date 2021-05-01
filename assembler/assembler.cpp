@@ -149,7 +149,7 @@ void asm_cmd::second_passing (text* asm_file, labels* label, int nmb_flags)
             }
 
             
-            if (byte_code[i] == JMP)
+            if (byte_code[i] == JMP || byte_code[i] == JE || byte_code[i] == JNE)
             {
                 i = label_input (asm_file, label, byte_code, (asm_file -> lexem + idx + 1) -> lexem_name, i);
                 idx++;
@@ -228,6 +228,11 @@ double asm_cmd::assembling (text* asm_file, char* cmd, int number)
         GET_COMMAND (rcx,   RCX)
         GET_COMMAND (rdx,   RDX)
         GET_COMMAND (jmp,   JMP)
+        GET_COMMAND (je ,    JE)
+        GET_COMMAND (jne,   JNE)
+        GET_COMMAND (inc,   INC)
+        GET_COMMAND (dec,   DEC)
+        GET_COMMAND (cmp,   CMP)
         GET_COMMAND (unknown_cmd, UNKNOWN_CMD)
     }
 
