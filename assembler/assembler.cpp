@@ -25,9 +25,10 @@ int asm_cmd::firs_passing (text* asm_file, labels* label)
     assert (asm_file -> lexem);
     assert (asm_file -> file_buffer);
    
-    int flag_counter = 0;  
-    int nmb_flags    = 0;
-    int nmb_lexems   = asm_file -> number_lexems;
+    int flag_counter   = 0;  
+    int nmb_flags      = 0;
+    int nmb_lexems     = asm_file -> number_lexems;
+    int labels_counter = 0;
 
     double number    = 0; 
     
@@ -45,8 +46,6 @@ int asm_cmd::firs_passing (text* asm_file, labels* label)
             number = atof (cmd);
             printf ("number is %lg\n", number);
             (asm_file -> lexem + i) -> lexem_type = NUMBER; 
-            printf ("\n1lexem type is %d\n", (asm_file -> lexem + i) -> lexem_type);
-            printf ("1 i is %d\n", i);
         }
 
         else 
@@ -58,13 +57,15 @@ int asm_cmd::firs_passing (text* asm_file, labels* label)
             {
                 nmb_flags = flags_input (asm_file, nmb_lexems, i, nmb_flags);
             }
+
             if (lexem[lex_len - 1] == ':')
             {
                 (asm_file -> lexem + i) -> lexem_type = LABEL;
                 lexem[lex_len - 1] = '\0';
 
-                label -> label_name = lexem;
-                label -> ip = i + nmb_flags;
+                (label + labels_counter) -> label_name = lexem;
+                (label + labels_counter) -> ip = i + nmb_flags - labels_counter + 1; //nmb_flags смещение из-за флагов, labels_counter смещение из-за пропуска меток +1 сам не ебу почему
+                labels_counter++;
             }
         }
     }
@@ -85,7 +86,10 @@ int flags_input (text* asm_file, int nmb_lex, int i, int nmb_flags)
         char* next_lex = (asm_file -> lexem + i + 1) -> lexem_name;
 
         if (isdigit (*next_lex)) // если след лексема число то это не регистр
+        {    
             (asm_file -> lexem + i) -> lexem_type = NMB_COMMAND;
+            nmb_flags++;
+        }
 
         else if (*(next_lex) == 'r') //если так то это регистр
         {    
@@ -110,33 +114,48 @@ void asm_cmd::second_passing (text* asm_file, labels* label, int nmb_flags)
 
     int nmb_lexems = asm_file -> number_lexems;
     int number = 0;
-    int offset_counter = 0;
+    int idx = 0;//бегает по неискаженному флагами буферу
 
-    for (int i = 0; i < nmb_lexems + nmb_flags + 2; i++)
+
+    for (int i = 0; i < nmb_lexems + nmb_flags; i++)
     {
-        char* lexem_name = (asm_file -> lexem + i - offset_counter) -> lexem_name;
-        int   lexem_type = (asm_file -> lexem + i - offset_counter) -> lexem_type;
+        char* lexem_name = (asm_file -> lexem + idx) -> lexem_name;
+        int   lexem_type = (asm_file -> lexem + idx) -> lexem_type;
 
+        if (lexem_name == nullptr) break;
+        
         if (lexem_type == NUMBER)
         {
             number = atof (lexem_name);
             byte_code [i] = asm_cmd::assembling (asm_file, nullptr, number);
+            idx++;
         }
 
         else 
         {
-            if ((asm_file -> lexem + i - offset_counter) -> lexem_type == LABEL)
-                continue; 
+            if ((asm_file -> lexem + idx) -> lexem_type == LABEL)
+            {
+                idx++;
+                i--;
+                continue;
+            }
 
             byte_code [i] = asm_cmd::assembling (asm_file, lexem_name, 0);
             
-            int temp = i;
-            i = placing_flags (asm_file, label, byte_code, nmb_lexems, i, offset_counter);
-            if (i != temp)
-                offset_counter++;
+
+            if (!strcmp (lexem_name, "push") || !strcmp (lexem_name, "pop"))
+            {
+                i = placing_flags (asm_file, label, byte_code, nmb_lexems, idx, i);
+            }
+
             
             if (byte_code[i] == JMP)
-                i = label_input (asm_file, label, byte_code, (asm_file -> lexem + i + 1 - offset_counter) -> lexem_name, i); 
+            {
+                i = label_input (asm_file, label, byte_code, (asm_file -> lexem + idx + 1) -> lexem_name, i);
+                idx++;
+            }
+
+            idx++;
         }
     }
 
@@ -147,26 +166,22 @@ void asm_cmd::second_passing (text* asm_file, labels* label, int nmb_flags)
 
 //=====================================================================================================
 
-int placing_flags (text* asm_file, labels* label, double* byte_code, int nmb_lexems, int i, int offsets_counter)
+int placing_flags (text* asm_file, labels* label, double* byte_code, int nmb_lexems, int idx, int i)
 {
-    if (i < nmb_lexems - 1)
+    int lex_type = (asm_file -> lexem + idx) -> lexem_type;
+
+    if (lex_type == REG_COMMAND) // если след лексема число то это не регистр
     {
-        int lex_type = (asm_file -> lexem + i - offsets_counter) -> lexem_type;
-
-        if (lex_type == REG_COMMAND) // если след лексема число то это не регистр
-        {
-            byte_code [++i] = REG_FLAG;
-            printf ("flag is %lg\n\n", byte_code [i]);
-        }
-
-        else if (lex_type == NMB_COMMAND) // если след лексема число то это не регистр
-        {
-            byte_code [++i] = NMB_FLAG;
-            printf ("flag is %lg\n\n", byte_code [i]);
-        }
-        //здесь можно еще один иф для без аргументного pop
+        byte_code [++i] = REG_FLAG;
+        printf ("flag is %lg\n\n", byte_code [i]);
     }
 
+    else if (lex_type == NMB_COMMAND) // если след лексема число то это не регистр
+    {
+        byte_code [++i] = NMB_FLAG;
+        printf ("flag is %lg\n\n", byte_code [i]);
+    }
+    //здесь можно еще один иф для без аргументного pop
     return i;
 }
 
@@ -178,7 +193,6 @@ int label_input (text* asm_file, labels* label, double* byte_code, char* next_cm
 {
     int label_index = 0;
     int nmb_lexems  = asm_file -> number_lexems;
-
     for (int index = 0; index < nmb_lexems; index++)
     { 
         if (!strcmp(((label + index) -> label_name), next_cmd))
@@ -187,7 +201,6 @@ int label_input (text* asm_file, labels* label, double* byte_code, char* next_cm
             break;
         }
     }
-
     byte_code [++i] = label_index;
 
     return i;
