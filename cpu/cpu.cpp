@@ -3,8 +3,9 @@
 void CPU_construct (CPU_t* cpu, char* file_name)
 {   
     stack_constr(stk, 2);
-    cpu -> stack = &stk;
-    
+    cpu -> stack = &stk;    
+    cpu -> regs  = (Regist*) calloc (4, sizeof (double));
+
     CPU_read_file (cpu, file_name);
     asm_cmd::determine_commands (cpu);
 
@@ -46,111 +47,178 @@ int asm_cmd::determine_commands (CPU_t* cpu)
     assert (cpu_file);
 
     double* buffer = cpu -> byte_code;
-    
-    double x1  = 0,
-           x2  = 0;
-    double res       = 0,
-           next_code = 0;
-           
-    for (int i = 0; buffer[i] != 0 ; i++)
-    {
-        double cmd  = buffer [i];
 
+    cpu -> flag = (cmp_flag*) calloc (2, sizeof (cmp_flag));
+    
+    for (int i = 0; i < 100; i++)
+        printf ("{%lg}\n", buffer[i]);
+
+    double x1  = 0;
+    double x2  = 0;
+    
+    double res       = 0;
+    double next_code = 0;
+    int jmp_idx;
+    
+    for (int i = 0; i < 100 ; i++)
+    {
+        double cmd = buffer [i];
         switch ((int) cmd)
         {
-        case PUSH:
-            next_code = buffer [++i];
-
-            if (next_code == 0) // проверка флага на ноль если так то это число
+            case PUSH:
             {
-                stack_push (cpu -> stack, buffer[++i]);
-                fprintf (cpu_file, "\t\tpush %lg:\n", buffer[i]);
-                cpu_print (cpu, cpu_file);
+                next_code = buffer [++i];
+
+                if (next_code == 0) // проверка флага на ноль если так то это число
+                {
+                    stack_push (cpu -> stack, buffer[++i]);
+                    fprintf (cpu_file, "\t\tpush %lg:\n", buffer[i]);
+                    cpu_print (cpu, cpu_file);
+                }
+                else if (next_code == 1) // push register
+                {
+                    const char* reg_name = reg_push (cpu, buffer[++i]);
+                    fprintf (cpu_file, "\t\tpush from register %s\n", reg_name);
+                    cpu_print (cpu, cpu_file);    
+                }
+                break;
             }
-            else if (next_code == 1) // push register
+
+            case POP:
             {
-                const char* reg_name = reg_push (cpu, buffer[++i]);
-                fprintf (cpu_file, "\t\tpush from register %s\n", reg_name);
-                cpu_print (cpu, cpu_file);    
+                next_code = buffer [++i];
+                
+                if (next_code == 0)
+                {
+                    res = stack_pop (cpu -> stack);
+                    fprintf (cpu_file, "\n\t\tpop %lg\n", res);
+                }
+                else if (next_code == 1)
+                {
+                    const char* reg_name = reg_pop (cpu, buffer[++i]);
+                    fprintf (cpu_file, "\t\tpop in register %s\n", reg_name);
+                    cpu_print (cpu, cpu_file); 
+                }
+                break;
             }
 
-            break;
+            case ADD:
+            {
+                ARIFMETICAL_CMD(add, +);
+                break;
+            }
 
-        case POP:
-            next_code = buffer [++i];
-            
-            if (next_code == 0)
+            case SUB:
+            {
+                ARIFMETICAL_CMD(sub, -);
+                break;
+            }
+
+            case DIV:
+            {
+                ARIFMETICAL_CMD(div, /);
+                break;
+            }
+
+            case MUL:
+            {
+                ARIFMETICAL_CMD(mul, *);
+                break;
+            }
+
+            case OUT:
             {
                 res = stack_pop (cpu -> stack);
-                fprintf (cpu_file, "\n\t\tpop %lg\n", res);
+
+                stack_push (cpu -> stack, res);
+                fprintf (cpu_file, "\t\tout: %lg\n", res);
+                cpu_print (cpu, cpu_file);
+                break; 
             }
-            else if (next_code == 1)
+
+            case END:
             {
-                const char* reg_name = reg_pop (cpu, buffer[++i]);
-                fprintf (cpu_file, "\t\tpop in register %s\n", reg_name);
-                cpu_print (cpu, cpu_file); 
+                fprintf (cpu_file, "\t\tend\n");
+                return 0;
+            }
+
+            case JMP:
+            {
+                jmp_idx = (int) buffer[i + 1] - 1; //цикл фор накинет еще 1
+                fprintf (cpu_file, "\t\tjump to byte_code[%d] = %lg\n", jmp_idx + 1, buffer[jmp_idx + 1]);
+                i = jmp_idx;
+                break;
+            }
+
+            case JE:
+            {
+                if ((cpu -> flag) -> ZF == 1)
+                {
+                    jmp_idx = (int) buffer[i + 1] - 1; 
+                    fprintf (cpu_file, "\t\tjump to byte_code[%d] = %lg\n", jmp_idx + 1, buffer[jmp_idx + 1]);
+                    i = jmp_idx;
+                }
+                break;
+            }
+
+            case JNE:
+            {
+                if ((cpu -> flag) -> ZF == 0)
+                {
+                    jmp_idx = (int) buffer[i + 1] - 1; 
+                    fprintf (cpu_file, "\t\tjump to byte_code[%d] = %lg\n", jmp_idx + 1, buffer[jmp_idx + 1]);
+                    i = jmp_idx;
+                }
+                break;
+            }
+
+            case CMP:
+            {
+                x1 = stack_pop (cpu -> stack);
+                x2 = stack_pop (cpu -> stack);
+
+                if (x1 == x2)
+                {
+                    (cpu -> flag) -> ZF = 1;
+                }
+                else 
+                {
+                    (cpu -> flag) -> ZF = 0;
+                }
+                fprintf (cpu_file, "\t\tcmp %lg and %lg\n", x2, x1);
+                break;
             }
             
-            break;
+            case INC:
+            {
+                const char* reg_name = reg_push (cpu, buffer[++i]);
+                x1 = stack_pop (cpu -> stack);
+                x1++;
+                stack_push (cpu -> stack, x1);
+                reg_pop (cpu, buffer[i]);
+                fprintf (cpu_file, "\t\tinc register %s\n", reg_name);
+                cpu_print (cpu, cpu_file);
+                break;
+            }
 
-        case ADD:
-            x1  = stack_pop (cpu -> stack);
-            x2  = stack_pop (cpu -> stack);
-            res = x1 + x2;
-            
-            stack_push (cpu -> stack, res);
-            fprintf (cpu_file, "\t\tadd %lg %lg:\n", x2, x1);
-            cpu_print (cpu, cpu_file); 
-            break;
+            case DEC:
+            {
+                const char* reg_name = reg_push (cpu, buffer[++i]); 
+                x1 = stack_pop (cpu -> stack);
+                x1--;
+                stack_push (cpu -> stack, x1);
+                reg_pop (cpu, buffer[i]);
+                fprintf (cpu_file, "\t\tdec register %s\n", reg_name);
+                cpu_print (cpu, cpu_file);
+                break;
+            }
 
-        case SUB:
-            x1  = stack_pop (cpu -> stack);
-            x2  = stack_pop (cpu -> stack);
-            res = x2 - x1;
-            
-            stack_push (cpu -> stack, res);
-            fprintf (cpu_file, "\t\tsub %lg %lg\n", x2, x1);
-            cpu_print (cpu, cpu_file); 
-            break;
+            case UNKNOWN_CMD:
+                return -1;
 
-        case DIV:
-            x1  = stack_pop (cpu -> stack);
-            x2  = stack_pop (cpu -> stack);
-            res = x2 / x1;
-            
-            stack_push (cpu -> stack, res); 
-            fprintf (cpu_file, "\t\tdiv %lg %lg\n", x2, x1);
-            cpu_print (cpu, cpu_file);
-            break;
-
-        case MUL:
-            x1  = stack_pop (cpu -> stack);
-            x2  = stack_pop (cpu -> stack);
-            res = x1 * x2;
-        
-            stack_push (cpu -> stack, res); 
-            fprintf (cpu_file, "\t\tmul %lg %lg\n", x2, x1);
-            cpu_print (cpu, cpu_file);
-            break;
-
-        case OUT:
-            res = stack_pop (cpu -> stack);
-
-            stack_push (cpu -> stack, res);
-            fprintf (cpu_file, "\t\tout %lg\n", res);
-            cpu_print (cpu, cpu_file);
-            break; 
-
-        case END:
-            fprintf (cpu_file, "\t\tend\n");
-            return 0;
-
-        case UNKNOWN_CMD:
-            return -1;
-
-        default:
-            fprintf (cpu_file, "Error CPU don't know your command:(\n");
-            return -2;
+            default:
+                fprintf (cpu_file, "Error CPU don't know your command:(\n");
+                return -2;
         }
     }
 
@@ -229,23 +297,31 @@ const char* reg_pop (CPU_t* cpu, double reg)
 
 //=====================================================================================================
   
-void CPU_destruct (CPU_t* cpu)
+void cpu_print (CPU_t* cpu, FILE* cpu_file)
 {
-    assert (cpu);
-    assert (cpu -> byte_code);
+    for (int i = 0; i < cpu -> stack -> size; i++) 
+        fprintf (cpu_file, "\t\t\t[%d]: %f\n", i, *((cpu -> stack) -> data + i)); 
 
-    free (cpu -> byte_code);
-    cpu -> byte_code = nullptr;
+    printf ("\n");
 }
 
 //=====================================================================================================
 
-void cpu_print (CPU_t* cpu, FILE* cpu_file)
+void CPU_destruct (CPU_t* cpu)
 {
-    for (int i = 0; i < cpu -> stack -> size; i++) 
-        fprintf (cpu_file, "\t\t[%d]: %f\n", i, *((cpu -> stack) -> data + i)); 
+    assert (cpu);
+    assert (cpu -> byte_code);
+    assert (cpu -> regs);
+    assert (cpu -> flag);
 
-    printf ("\n");
+    free (cpu -> byte_code);
+    cpu -> byte_code = nullptr;
+
+    free (cpu -> regs);
+    cpu -> regs = nullptr;
+
+    free (cpu -> flag);
+    cpu -> flag = nullptr;
 }
 
 //=====================================================================================================
