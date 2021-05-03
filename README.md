@@ -28,22 +28,14 @@ Sorry for two make in one project in next update I promise to fix that.
 *   add
 *   sub
 *   div
-*mul
-
-*out
-
-*end
-
-*jmp
-
-*je
-
-*jne
-
-*inc
-
-*dec
-
-*cmp
+*   mul
+*   out
+*   end
+*   jmp
+*   je
+*   jne
+*   inc
+*   dec
+*   cmp
 
 There are not so many commands but they are enough to write the simplest codes.
