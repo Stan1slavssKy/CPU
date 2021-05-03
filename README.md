@@ -22,7 +22,8 @@ You can do it like that:
 Sorry for two make in one project in next update I promise to fix that.
 
 ## What commands does my project understand?
-push
+
+*push
 pop
 add
 sub
@@ -36,4 +37,5 @@ jne
 inc
 dec
 cmp
+
 There are not so many commands but they are enough to write the simplest codes.
