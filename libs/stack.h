@@ -14,8 +14,8 @@
 
 #define stack_constr(stack_name, capacity)       \
         Stack_t stack_name = {};                 \
-        stack_name.name = #stack_name;                  \
-        stack_construct (&stack_name, capacity); 
+        stack_name.name = #stack_name;           \
+        stack_construct (&stack_name, capacity); \
 
 //----------------------------------------------------------
     
