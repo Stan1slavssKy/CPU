@@ -23,16 +23,11 @@ Sorry for two make in one project in next update I promise to fix that.
 
 ## What commands does my project understand?
 
-*push
-
-*pop
-
-*add
-
-*sub
-
-*div
-
+*   pusр
+*   pop
+*   add
+*   sub
+*   div
 *mul
 
 *out
