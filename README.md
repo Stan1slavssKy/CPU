@@ -23,7 +23,7 @@ Sorry for two make in one project in next update I promise to fix that.
 
 ## What commands does my project understand?
 
-*   pusр
+*   push
 *   pop
 *   add
 *   sub
