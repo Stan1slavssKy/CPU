@@ -8,6 +8,8 @@ A processor is a project that processes your assembly commands. For example, you
 
 If you want to use this program you need to download directory CPU.
 
+If you want to write something useful on my processor that you need to go to the text files folder and in test.asm you can write your code in assembly language.
+
 Then you need to compile assembler and then cpu. 
 
 You can do it like that: 
