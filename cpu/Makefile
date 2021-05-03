@@ -1,7 +1,8 @@
-CXX       = g++
+
+CXX       = g++ -std=c++14
 WARNINGS  = -Wall -Wextra
 
-DEBUG_MODE   = -g3 -O0 
+DEBUG_MODE   = -g -O0 
 RELEASE_MODE = -g0 -O3
 
 SOURCE  = cpu.cpp   cpu_main.cpp ../libs/stack.cpp ../libs/protection.cpp ../libs/Onegin.cpp
@@ -15,7 +16,7 @@ INCLUDE     = stack
 default: valgrind
 
 valgrind: $(OUTPUT)
-	valgrind ./$(OUTPUT) "../txt files/asm_binary"
+	valgrind  ./$(OUTPUT) "../txt files/asm_binary"
 
 launch: $(OUTPUT)
 	./$(OUTPUT) "../txt files/asm_binary"
