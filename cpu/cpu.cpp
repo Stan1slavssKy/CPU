@@ -142,6 +142,7 @@ int asm_cmd::determine_commands (CPU_t* cpu, int size_of_file)
             case END:
             {
                 fprintf (cpu_file, "\t\tend\n");
+                fclose (cpu_file);
                 return 0;
             }
 
@@ -224,11 +225,17 @@ int asm_cmd::determine_commands (CPU_t* cpu, int size_of_file)
             }
 
             case UNKNOWN_CMD:
+            {
+                fclose (cpu_file);
                 return -1;
+            }
 
             default:
+            {
                 fprintf (cpu_file, "Error CPU don't know your command:(\n");
+                fclose (cpu_file);
                 return -2;
+            }
         }
     }
 
