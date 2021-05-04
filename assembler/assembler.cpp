@@ -15,6 +15,8 @@ void assembler_read (text* asm_file, char* file_name)
     
     int nmb_flags = asm_cmd::firs_passing (asm_file, label);
     asm_cmd::second_passing (asm_file, label, nmb_flags);
+
+    free (label);
 }
 
 //=====================================================================================================
@@ -272,6 +274,6 @@ void assembler_free (text* asm_file)
     assert (asm_file -> lexem);
     free (asm_file -> lexem);
     asm_file -> lexem = nullptr;
-}              
+}             
 
 //=====================================================================================================
