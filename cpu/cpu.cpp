@@ -6,8 +6,8 @@ void CPU_construct (CPU_t* cpu, char* file_name)
     cpu -> stack = &stk;    
     cpu -> regs  = (Regist*) calloc (4, sizeof (double));
 
-    CPU_read_file (cpu, file_name);
-    asm_cmd::determine_commands (cpu);
+    int size_of_file = CPU_read_file (cpu, file_name);
+    asm_cmd::determine_commands (cpu, size_of_file);
 
     stack_dump     (cpu -> stack);
     stack_destruct (cpu -> stack);
@@ -15,7 +15,7 @@ void CPU_construct (CPU_t* cpu, char* file_name)
 
 //=====================================================================================================
 
-void CPU_read_file (CPU_t* cpu, char* file_name)
+int CPU_read_file (CPU_t* cpu, char* file_name)
 {
     assert (cpu);
     assert (cpu -> stack);
@@ -33,11 +33,13 @@ void CPU_read_file (CPU_t* cpu, char* file_name)
 
     fread  (file_buffer, sizeof (char), size_of_file, file);
     fclose (file);
+
+    return size_of_file;
 }
 
 //=====================================================================================================
 
-int asm_cmd::determine_commands (CPU_t* cpu)
+int asm_cmd::determine_commands (CPU_t* cpu, int size_of_file)
 {
     assert (cpu);
     assert (cpu -> stack);
@@ -49,9 +51,7 @@ int asm_cmd::determine_commands (CPU_t* cpu)
     double* buffer = cpu -> byte_code;
 
     cpu -> flag = (cmp_flag*) calloc (2, sizeof (cmp_flag));
-    
-    for (int i = 0; i < 100; i++)
-        printf ("{%lg}\n", buffer[i]);
+    assert (cpu -> flag);
 
     double x1  = 0;
     double x2  = 0;
@@ -59,8 +59,11 @@ int asm_cmd::determine_commands (CPU_t* cpu)
     double res       = 0;
     double next_code = 0;
     int jmp_idx;
-    
-    for (int i = 0; i < 100 ; i++)
+    int nmb_lex = size_of_file / sizeof (double);
+
+    printf ("nmb_lexems = %d\n", nmb_lex);
+
+    for (int i = 0; i < nmb_lex ; i++)
     {
         double cmd = buffer [i];
         switch ((int) cmd)
@@ -90,7 +93,7 @@ int asm_cmd::determine_commands (CPU_t* cpu)
                 
                 if (next_code == 0)
                 {
-                    res = stack_pop (cpu -> stack);
+                    res = stack_pop (cpu -> stack);               
                     fprintf (cpu_file, "\n\t\tpop %lg\n", res);
                 }
                 else if (next_code == 1)
@@ -147,6 +150,7 @@ int asm_cmd::determine_commands (CPU_t* cpu)
                 jmp_idx = (int) buffer[i + 1] - 1; //цикл фор накинет еще 1
                 fprintf (cpu_file, "\t\tjump to byte_code[%d] = %lg\n", jmp_idx + 1, buffer[jmp_idx + 1]);
                 i = jmp_idx;
+                RESET_FLAGS
                 break;
             }
 
@@ -156,19 +160,25 @@ int asm_cmd::determine_commands (CPU_t* cpu)
                 {
                     jmp_idx = (int) buffer[i + 1] - 1; 
                     fprintf (cpu_file, "\t\tjump to byte_code[%d] = %lg\n", jmp_idx + 1, buffer[jmp_idx + 1]);
-                    i = jmp_idx;
+                    i = jmp_idx - 1;   
                 }
+                RESET_FLAGS
+                i++;
                 break;
             }
 
             case JNE:
             {
+                fprintf (cpu_file, "\t\tline is %d  before if ZF = [%d]\n", __LINE__, (cpu->flag)->ZF);
                 if ((cpu -> flag) -> ZF == 0)
                 {
                     jmp_idx = (int) buffer[i + 1] - 1; 
                     fprintf (cpu_file, "\t\tjump to byte_code[%d] = %lg\n", jmp_idx + 1, buffer[jmp_idx + 1]);
-                    i = jmp_idx;
+                    i = jmp_idx - 1;
                 }
+                RESET_FLAGS
+                i++;
+          
                 break;
             }
 
