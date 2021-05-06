@@ -1,26 +1,37 @@
+#--------------------------------------------------------------------------------------
+
+# Makefile for akinator_project
+#		author: Kurnevich Stanislav
+
+#--------------------------------------------------------------------------------------
+
 CXX       = g++
 WARNINGS  = -Wall -Wextra 
 
 DEBUG_MODE   = -g3 -O0 
 RELEASE_MODE = -g0 -O3
 
-SOURCE  = assembler_main.cpp assembler.cpp ../libs/Onegin.cpp
-OBJECT  = assembler_main.o   assembler.o  ../libs/Onegin.o
-OUTPUT  = assembler 
+VALGRIND_FLAGS = --leak-check=full
 
-INCLUDE_DIR = ../../Onegin
-INCLUDE     = onegin
+AKINATOR_DIR = ../akinator
+TREE_DIR	 = ../tree
+
+SOURCE = $(AKINATOR_DIR)/main.cpp $(AKINATOR_DIR)/akinator.cpp $(TREE_DIR)/tree.cpp
+OBJECT = $(SOURCE:.cpp=.o)
+OUTPUT = akinator
 
 default: valgrind
 
 valgrind: $(OUTPUT)
-	valgrind ./$(OUTPUT)"../txt files/text.asm"
+	valgrind $(VALGRIND_FLAGS) ./$(OUTPUT)
 
 launch: $(OUTPUT)
-	./$(OUTPUT)"../txt files/asm"
+	./$(OUTPUT)
 
 $(OUTPUT): $(OBJECT)
 	$(CXX) $(WARNINGS) $(DEBUG_MODE) $^ -o $(OUTPUT)
 
 clean:
 	rm -f *.o *.a $(OUTPUT)
+
+#--------------------------------------------------------------------------------------
